@@ -73,6 +73,9 @@ describe("KpiRenderer", () => {
         },
         progress: {
             show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
+        },
+        status: {
+            show: true, statusSource: "auto", showCircle: true, circleSize: 8, fontFamily: "Segoe UI", fontSize: 12, textColor: "#6B7280", effectiveSuccessThreshold: 1.0, effectiveWarningThreshold: 0.9, successText: "Cumpliendo", warningText: "En camino", dangerText: "En riesgo", noDataText: "Sin información", successColor: "#16A34A", warningColor: "#F59E0B", dangerColor: "#DC2626", neutralColor: "#6B7280"
         }
     });
 
@@ -93,7 +96,8 @@ describe("KpiRenderer", () => {
         achievement: { formattedValue: "123%", progressRatio: 1.23 },
         calculatedVariationColor: "#16A34A",
         calculatedStatusColor: "#16A34A",
-        status: { text: "On Track" }
+        statusCategory: "success",
+        calculatedStatusText: "On Track"
     });
 
     const createDummyLayout = (): KpiLayout => ({

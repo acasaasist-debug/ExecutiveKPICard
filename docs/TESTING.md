@@ -36,3 +36,10 @@ Para validar la correcta construcción del visual `.pbiviz`:
 npm run package
 npm run verify
 ```
+
+## Estado de Fases de Desarrollo
+
+- **FASE 1 a FASE 4:** APROBADAS
+- **FASE 5A:** APROBADA (Layout funcional, parseo y formato numérico)
+- **FASE 5B:** APROBADA (Layout vertical adaptativo, barras de progreso, metas y comparación). Alcanzó 172 pruebas exitosas en Jest.
+- **FASE 5C:** PENDIENTE

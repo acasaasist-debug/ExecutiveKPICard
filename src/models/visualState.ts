@@ -1,4 +1,5 @@
 import { VisualFormattingSettingsModel } from "../settings/formattingSettings";
+import { StatusCategory } from "./statusCategory";
 
 export interface RenderSettings {
     general: {
@@ -80,6 +81,25 @@ export interface RenderSettings {
         markColor: string;
         markThickness: number;
     };
+    status: {
+        show: boolean;
+        statusSource: "auto" | "data" | "custom";
+        showCircle: boolean;
+        circleSize: number;
+        fontFamily: string;
+        fontSize: number;
+        textColor: string;
+        effectiveSuccessThreshold: number;
+        effectiveWarningThreshold: number;
+        successText: string;
+        warningText: string;
+        dangerText: string;
+        noDataText: string;
+        successColor: string;
+        warningColor: string;
+        dangerColor: string;
+        neutralColor: string;
+    };
 }
 
 export type Phase5ARenderSettings = RenderSettings;
@@ -110,7 +130,6 @@ export interface VisualState {
         formattedValue: string;
         progressRatio: number;
     };
-    status?: {
-        text: string;
-    };
+    statusCategory: StatusCategory;
+    calculatedStatusText: string;
 }

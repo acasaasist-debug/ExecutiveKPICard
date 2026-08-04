@@ -60,6 +60,9 @@ describe("LayoutCalculator", () => {
         },
         progress: {
             show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
+        },
+        status: {
+            show: true, statusSource: "auto", showCircle: true, circleSize: 8, fontFamily: "Segoe UI", fontSize: 12, textColor: "#6B7280", effectiveSuccessThreshold: 1.0, effectiveWarningThreshold: 0.9, successText: "Cumpliendo", warningText: "En camino", dangerText: "En riesgo", noDataText: "Sin información", successColor: "#16A34A", warningColor: "#F59E0B", dangerColor: "#DC2626", neutralColor: "#6B7280"
         }
     });
 
@@ -80,7 +83,8 @@ describe("LayoutCalculator", () => {
         achievement: { formattedValue: "123%", progressRatio: 1.23 },
         calculatedVariationColor: "#16A34A",
         calculatedStatusColor: "green",
-        status: { text: "On Track" }
+        statusCategory: "success",
+        calculatedStatusText: "On Track"
     });
 
     describe("Mode Determination", () => {
@@ -171,7 +175,7 @@ describe("LayoutCalculator", () => {
 
         it("hides status if missing", () => {
             const state = createDummyState();
-            delete state.status;
+            state.calculatedStatusText = "";
             const layout = calculator.calculate({ width: 300, height: 220 }, state);
             expect(layout.showStatus).toBe(false);
             expect(layout.statusIndicator).toBeUndefined();
@@ -184,7 +188,9 @@ describe("LayoutCalculator", () => {
                 settings: createDummySettings(),
                 calculatedVariationColor: null,
                 calculatedStatusColor: "",
-                actual: { formattedValue: "1M" }
+                actual: { formattedValue: "1M" },
+                statusCategory: "neutral",
+                calculatedStatusText: ""
             };
             const layout = calculator.calculate({ width: 300, height: 220 }, state);
             expect(layout.showTitle).toBe(false);
@@ -327,7 +333,7 @@ describe("LayoutCalculator", () => {
         it("Ocultar Estado no deja gap huérfano y redistribuye", () => {
             const state = createDummyState();
             const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
-            delete state.status;
+            state.calculatedStatusText = "";
             const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
             
             expect(layoutHidden.progress!.track.y).not.toEqual(layoutFull.progress!.track.y);

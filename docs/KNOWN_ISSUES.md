@@ -49,4 +49,17 @@ Este defecto debe ser revisado si un cambio de la **Fase 5B** agrava el síntoma
 
 ---
 
+## KI-001 — El valor y el título se ocultaban al agregar el rol Título
+
+**Estado:** Resuelta  
+**Versión corregida:** 1.0.0.4
+
+### Validación
+
+- El Valor actual permanece visible al agregar el Título.
+- El Título aparece inmediatamente.
+- No es necesario abrir el panel de formato.
+- El comportamiento persiste durante redimensionamientos.
+- No se duplican elementos SVG.
+
 *Última actualización: 2026-08-04*

@@ -15,6 +15,7 @@ import { DataViewReadStatus } from "./models/dataViewStatus";
 import { KpiCalculationService } from "./services/kpiCalculationService";
 import { NumberFormattingService } from "./services/numberFormattingService";
 import { ColorService } from "./services/colorService";
+import { StatusService } from "./services/statusService";
 
 import { VisualState, RenderSettings } from "./models/visualState";
 import { normalizeRenderSettings } from "./utils/renderSettingsNormalizer";
@@ -170,20 +171,6 @@ export class Visual implements IVisual {
             );
             const progressRatio = this.kpiCalculationService.getProgressRatio(calculatedAchievement);
 
-            // Status
-            const statusMode = (kpiData.status && kpiData.status.trim() !== "") || kpiData.statusColor
-                ? "data" : "auto";
-            const statusResult = this.kpiCalculationService.calculateStatus(
-                calculatedAchievement,
-                statusMode as "auto" | "data" | "custom",
-                1.00,
-                0.90,
-                kpiData.status
-            );
-            const finalStatusColor = this.colorService.getStatusColor(
-                kpiData.statusColor, statusResult.autoColor
-            );
-
             // Build render settings from formatting cards
             const renderSettings: RenderSettings = normalizeRenderSettings(
                 this.formattingSettings.generalCard,
@@ -191,7 +178,16 @@ export class Visual implements IVisual {
                 this.formattingSettings.actualValueCard,
                 this.formattingSettings.comparisonCard,
                 this.formattingSettings.targetCard,
-                this.formattingSettings.progressCard
+                this.formattingSettings.progressCard,
+                this.formattingSettings.statusCard
+            );
+
+            // Status
+            const resolvedStatus = StatusService.resolve(
+                calculatedAchievement,
+                kpiData.status !== undefined ? kpiData.status : null,
+                kpiData.statusColor !== undefined ? kpiData.statusColor : null,
+                renderSettings.status
             );
 
             // Trend / variation color
@@ -255,7 +251,7 @@ export class Visual implements IVisual {
                 hasActualValueRole: kpiData.hasActualValueRole,
                 settings:           renderSettings,
                 calculatedVariationColor: variationColor,
-                calculatedStatusColor: finalStatusColor,
+                calculatedStatusColor: resolvedStatus.color,
                 title:              kpiData.title ? { text: kpiData.title } : undefined,
                 actual:             { formattedValue: actualStr },
                 comparison: {
@@ -270,9 +266,8 @@ export class Visual implements IVisual {
                     formattedValue: achStr,
                     progressRatio
                 } : undefined,
-                status: {
-                    text:  statusResult.text
-                }
+                statusCategory: resolvedStatus.category,
+                calculatedStatusText: resolvedStatus.text
             };
 
             const layout = this.layoutCalculator.calculate(options.viewport, state);

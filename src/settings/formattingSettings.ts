@@ -524,6 +524,141 @@ class ProgressCard extends Card {
     ];
 }
 
+class StatusCard extends Card {
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+    
+    statusSource = new formattingSettings.ItemDropdown({
+        name: "statusSource",
+        displayName: "Status Source",
+        value: { value: "auto", displayName: "Automático" },
+        items: [
+            { value: "auto", displayName: "Automático" },
+            { value: "data", displayName: "Desde datos" },
+            { value: "custom", displayName: "Personalizado" }
+        ]
+    });
+    
+    showCircle = new formattingSettings.ToggleSwitch({
+        name: "showCircle",
+        displayName: "Show Circle",
+        value: true
+    });
+    
+    circleSize = new formattingSettings.NumUpDown({
+        name: "circleSize",
+        displayName: "Circle Size",
+        value: 8
+    });
+    
+    fontFamily = new formattingSettings.FontPicker({
+        name: "fontFamily",
+        displayName: "Font Family",
+        value: "Segoe UI"
+    });
+    
+    fontSize = new formattingSettings.NumUpDown({
+        name: "fontSize",
+        displayName: "Text Size",
+        value: 12
+    });
+    
+    color = new formattingSettings.ColorPicker({
+        name: "color",
+        displayName: "Text Color",
+        value: { value: "#6B7280" }
+    });
+    
+    successThreshold = new formattingSettings.NumUpDown({
+        name: "successThreshold",
+        displayName: "Success Threshold",
+        value: 1.00
+    });
+    
+    warningThreshold = new formattingSettings.NumUpDown({
+        name: "warningThreshold",
+        displayName: "Warning Threshold",
+        value: 0.90
+    });
+    
+    successText = new formattingSettings.TextInput({
+        name: "successText",
+        displayName: "Success Text",
+        value: "Cumpliendo",
+        placeholder: "Cumpliendo"
+    });
+    
+    warningText = new formattingSettings.TextInput({
+        name: "warningText",
+        displayName: "Warning Text",
+        value: "En camino",
+        placeholder: "En camino"
+    });
+    
+    dangerText = new formattingSettings.TextInput({
+        name: "dangerText",
+        displayName: "Danger Text",
+        value: "En riesgo",
+        placeholder: "En riesgo"
+    });
+    
+    noDataText = new formattingSettings.TextInput({
+        name: "noDataText",
+        displayName: "No Data Text",
+        value: "Sin información",
+        placeholder: "Sin información"
+    });
+    
+    successColor = new formattingSettings.ColorPicker({
+        name: "successColor",
+        displayName: "Success Color",
+        value: { value: "#16A34A" }
+    });
+    
+    warningColor = new formattingSettings.ColorPicker({
+        name: "warningColor",
+        displayName: "Warning Color",
+        value: { value: "#F59E0B" }
+    });
+    
+    dangerColor = new formattingSettings.ColorPicker({
+        name: "dangerColor",
+        displayName: "Danger Color",
+        value: { value: "#DC2626" }
+    });
+    
+    neutralColor = new formattingSettings.ColorPicker({
+        name: "neutralColor",
+        displayName: "Neutral Color",
+        value: { value: "#6B7280" }
+    });
+
+    name: string = "status";
+    displayName: string = "Estado";
+    slices: Slice[] = [
+        this.show,
+        this.statusSource,
+        this.showCircle,
+        this.circleSize,
+        this.fontFamily,
+        this.fontSize,
+        this.color,
+        this.successThreshold,
+        this.warningThreshold,
+        this.successText,
+        this.warningText,
+        this.dangerText,
+        this.noDataText,
+        this.successColor,
+        this.warningColor,
+        this.dangerColor,
+        this.neutralColor
+    ];
+}
+
 export class VisualFormattingSettingsModel extends Model {
     generalCard = new GeneralCard();
     titleCard = new TitleCard();
@@ -531,6 +666,7 @@ export class VisualFormattingSettingsModel extends Model {
     comparisonCard = new ComparisonCard();
     targetCard = new TargetCard();
     progressCard = new ProgressCard();
+    statusCard = new StatusCard();
 
     cards = [
         this.generalCard, 
@@ -538,7 +674,8 @@ export class VisualFormattingSettingsModel extends Model {
         this.actualValueCard,
         this.comparisonCard,
         this.targetCard,
-        this.progressCard
+        this.progressCard,
+        this.statusCard
     ];
     
     public populateVisibleProperties() {
@@ -626,5 +763,26 @@ export class VisualFormattingSettingsModel extends Model {
         const showMarkProps = isProgressVisible && this.progressCard.showOverachievementMark.value;
         this.progressCard.markColor.visible = showMarkProps;
         this.progressCard.markThickness.visible = showMarkProps;
+        
+        // STATUS visibility
+        const isStatusVisible = this.statusCard.show.value;
+        this.statusCard.statusSource.visible = isStatusVisible;
+        this.statusCard.showCircle.visible = isStatusVisible;
+        this.statusCard.circleSize.visible = isStatusVisible && this.statusCard.showCircle.value;
+        this.statusCard.fontFamily.visible = isStatusVisible;
+        this.statusCard.fontSize.visible = isStatusVisible;
+        this.statusCard.color.visible = isStatusVisible;
+        this.statusCard.successThreshold.visible = isStatusVisible;
+        this.statusCard.warningThreshold.visible = isStatusVisible;
+        
+        const isCustomStatus = isStatusVisible && (this.statusCard.statusSource.value as powerbi.IEnumMember).value === "custom";
+        this.statusCard.successText.visible = isCustomStatus;
+        this.statusCard.warningText.visible = isCustomStatus;
+        this.statusCard.dangerText.visible = isCustomStatus;
+        this.statusCard.noDataText.visible = isCustomStatus;
+        this.statusCard.successColor.visible = isCustomStatus;
+        this.statusCard.warningColor.visible = isCustomStatus;
+        this.statusCard.dangerColor.visible = isCustomStatus;
+        this.statusCard.neutralColor.visible = isCustomStatus;
     }
 }

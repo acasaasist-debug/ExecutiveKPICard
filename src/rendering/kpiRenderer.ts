@@ -80,7 +80,7 @@ export class KpiRenderer {
         if (topLineOn) {
             const topLineUseStatusColor = generalCard.topLineUseStatusColor;
             const customTopLineColor = generalCard.topLineColor;
-            const lineColor = topLineUseStatusColor && state.status ? state.calculatedStatusColor : customTopLineColor;
+            const lineColor = topLineUseStatusColor && state.calculatedStatusText ? state.calculatedStatusColor : customTopLineColor;
             
             const w = layout.viewport.width;
             const h = layout.accent.height;
@@ -323,17 +323,19 @@ export class KpiRenderer {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.statusGroup);
         SvgFactory.clearGroup(group);
 
-        if (!layout.showStatus || !layout.statusIndicator || !layout.statusText || !state.status) return;
+        if (!layout.showStatus || !layout.statusText || !state.calculatedStatusText) return;
 
         // Indicator
-        const circle = SvgFactory.createCircle(SVGConstants.classes.statusIndicator);
-        circle.setAttribute("cx", layout.statusIndicator.x.toString());
-        circle.setAttribute("cy", layout.statusIndicator.y.toString());
-        circle.setAttribute("r", layout.statusIndicator.radius.toString());
-        if (state.calculatedStatusColor) {
-            circle.style.fill = state.calculatedStatusColor;
+        if (layout.statusIndicator) {
+            const circle = SvgFactory.createCircle(SVGConstants.classes.statusIndicator);
+            circle.setAttribute("cx", layout.statusIndicator.x.toString());
+            circle.setAttribute("cy", layout.statusIndicator.y.toString());
+            circle.setAttribute("r", layout.statusIndicator.radius.toString());
+            if (state.calculatedStatusColor) {
+                circle.style.fill = state.calculatedStatusColor;
+            }
+            group.appendChild(circle);
         }
-        group.appendChild(circle);
 
         // Text
         const text = SvgFactory.createText(SVGConstants.classes.statusText);
@@ -341,12 +343,12 @@ export class KpiRenderer {
         text.setAttribute("y", layout.statusText.y.toString());
         text.setAttribute("text-anchor", layout.statusText.textAnchor || "start");
         text.style.fontSize = `${layout.statusText.fontSize}px`;
+        const font = state.settings.status.fontFamily || SVGConstants.fontFamilies.primary;
+        text.style.fontFamily = font;
         
-        const truncated = TextUtils.truncateText(state.status.text, layout.statusText.width || 100, layout.statusText.fontSize || 12, SVGConstants.fontFamilies.primary);
+        const truncated = TextUtils.truncateText(state.calculatedStatusText, layout.statusText.width || 100, layout.statusText.fontSize || 12, font);
         text.textContent = truncated;
-        if (state.calculatedStatusColor) {
-            text.style.fill = state.calculatedStatusColor;
-        }
+        text.style.fill = state.settings.status.textColor;
 
         group.appendChild(text);
     }

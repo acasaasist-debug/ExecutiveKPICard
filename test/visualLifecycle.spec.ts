@@ -42,6 +42,9 @@ const dummySettings = (): any => ({
     },
     progress: {
         show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
+    },
+    status: {
+        show: true, statusSource: "auto", showCircle: true, circleSize: 8, fontFamily: "Segoe UI", fontSize: 12, textColor: "#6B7280", effectiveSuccessThreshold: 1.0, effectiveWarningThreshold: 0.9, successText: "Cumpliendo", warningText: "En camino", dangerText: "En riesgo", noDataText: "Sin información", successColor: "#16A34A", warningColor: "#F59E0B", dangerColor: "#DC2626", neutralColor: "#6B7280"
     }
 });
 
@@ -54,7 +57,8 @@ function buildState(withTitle: boolean, value = "1,234"): VisualState {
         actual: { formattedValue: value },
         calculatedVariationColor: null,
         calculatedStatusColor: "#16A34A",
-        status: { text: "OK" }
+        statusCategory: "success",
+        calculatedStatusText: "OK"
     };
 }
 

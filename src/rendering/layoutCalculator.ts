@@ -33,7 +33,7 @@ export class LayoutCalculator {
         const showComparison = settings.comparison.show && !!state.comparison && mode !== LayoutMode.MINIMUM;
         const showTarget = settings.target.show && !!state.target && mode !== LayoutMode.MINIMUM;
         const showProgress = settings.progress.show && !!state.achievement && mode !== LayoutMode.MINIMUM;
-        const showStatus = !!state.status;
+        const showStatus = settings.status.show && !!state.calculatedStatusText;
 
         const blocks: VerticalBlock[] = [];
         const gapsConfig = GapsByMode[mode];
@@ -87,8 +87,8 @@ export class LayoutCalculator {
             });
         }
         if (showStatus) {
-            const statusFontSize = SVGConstants.fontSizes[mode.toUpperCase() as keyof typeof SVGConstants.fontSizes].status;
-            const radius = VisualDefaults.Layout.StatusIndicatorRadius;
+            const statusFontSize = settings.status.fontSize;
+            const radius = settings.status.showCircle ? (settings.status.circleSize / 2) : 0;
             const statusHeight = Math.max(statusFontSize, radius * 2);
             blocks.push({
                 key: "status",
@@ -276,23 +276,26 @@ export class LayoutCalculator {
                     break;
                     
                 case "status":
-                    const sFontSize = SVGConstants.fontSizes[mode.toUpperCase() as keyof typeof SVGConstants.fontSizes].status;
-                    const radius = VisualDefaults.Layout.StatusIndicatorRadius;
+                    const sFontSize = settings.status.fontSize;
+                    const sRadius = settings.status.showCircle ? (settings.status.circleSize / 2) : 0;
                     const statusY = blockTop + b.height; 
-                    const textWidth = TextUtils.measureTextWidth(state.status!.text, sFontSize, SVGConstants.fontFamilies.primary);
-                    const totalWidth = (radius * 2) + 6 + textWidth;
+                    const textWidth = TextUtils.measureTextWidth(state.calculatedStatusText, sFontSize, settings.status.fontFamily);
+                    const circleSpace = sRadius > 0 ? (sRadius * 2) + 6 : 0;
+                    const totalWidth = circleSpace + textWidth;
                     const startX = (viewport.width - totalWidth) / 2;
 
-                    result.statusIndicator = {
-                        x: startX + radius,
-                        y: statusY - (sFontSize / 2) + 1,
-                        width: radius * 2,
-                        height: radius * 2,
-                        radius: radius
-                    };
+                    if (sRadius > 0) {
+                        result.statusIndicator = {
+                            x: startX + sRadius,
+                            y: statusY - (sFontSize / 2) + 1,
+                            width: sRadius * 2,
+                            height: sRadius * 2,
+                            radius: sRadius
+                        };
+                    }
 
                     result.statusText = {
-                        x: startX + (radius * 2) + 6,
+                        x: startX + circleSpace,
                         y: statusY,
                         width: textWidth,
                         fontSize: sFontSize,

@@ -8,11 +8,22 @@ export function normalizeRenderSettings(
     actualValueCard: any,
     comparisonCard: any,
     targetCard: any,
-    progressCard: any
+    progressCard: any,
+    statusCard: any
 ): RenderSettings {
     const height = clamp(progressCard.height.value, 4, 40);
     const configuredRadius = clamp(progressCard.radius.value, 0, 20);
     const effectiveRadius = Math.min(configuredRadius, height / 2);
+
+    const rawSuccess = clamp(statusCard.successThreshold.value, 0, 5);
+    const rawWarning = clamp(statusCard.warningThreshold.value, 0, 5);
+    const effectiveSuccessThreshold = Math.max(rawSuccess, rawWarning);
+    const effectiveWarningThreshold = Math.min(rawSuccess, rawWarning);
+
+    let rawStatusSource = statusCard.statusSource.value?.value || "auto";
+    if (rawStatusSource !== "auto" && rawStatusSource !== "data" && rawStatusSource !== "custom") {
+        rawStatusSource = "auto";
+    }
 
     return {
         general: {
@@ -93,6 +104,25 @@ export function normalizeRenderSettings(
             showOverachievementMark: !!progressCard.showOverachievementMark.value,
             markColor: normalizeHexColor(progressCard.markColor.value.value, "#111827"),
             markThickness: clamp(progressCard.markThickness.value, 1, 10)
+        },
+        status: {
+            show: !!statusCard.show.value,
+            statusSource: rawStatusSource as "auto" | "data" | "custom",
+            showCircle: !!statusCard.showCircle.value,
+            circleSize: clamp(statusCard.circleSize.value, 2, 24),
+            fontFamily: safeText(statusCard.fontFamily.value) ?? "Segoe UI",
+            fontSize: clamp(statusCard.fontSize.value, 8, 36),
+            textColor: normalizeHexColor(statusCard.color.value.value, "#6B7280"),
+            effectiveSuccessThreshold,
+            effectiveWarningThreshold,
+            successText: safeText(statusCard.successText.value)?.trim() || "Cumpliendo",
+            warningText: safeText(statusCard.warningText.value)?.trim() || "En camino",
+            dangerText: safeText(statusCard.dangerText.value)?.trim() || "En riesgo",
+            noDataText: safeText(statusCard.noDataText.value)?.trim() || "Sin información",
+            successColor: normalizeHexColor(statusCard.successColor.value.value, "#16A34A"),
+            warningColor: normalizeHexColor(statusCard.warningColor.value.value, "#F59E0B"),
+            dangerColor: normalizeHexColor(statusCard.dangerColor.value.value, "#DC2626"),
+            neutralColor: normalizeHexColor(statusCard.neutralColor.value.value, "#6B7280")
         }
     };
 }

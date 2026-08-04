@@ -7,11 +7,15 @@ describe("VisualFormattingSettingsModel", () => {
         model = new VisualFormattingSettingsModel();
     });
 
-    it("should create General, Title, ActualValue, Comparison, Target, Progress cards", () => {
-        expect(model.cards.length).toBe(6);
+    it("should create General, Title, ActualValue, Comparison, Target, Progress, Status cards", () => {
+        expect(model.cards.length).toBe(7);
         expect(model.generalCard.name).toBe("general");
         expect(model.titleCard.name).toBe("title");
         expect(model.actualValueCard.name).toBe("actualValue");
+        expect(model.comparisonCard.name).toBe("comparison");
+        expect(model.targetCard.name).toBe("target");
+        expect(model.progressCard.name).toBe("progress");
+        expect(model.statusCard.name).toBe("status");
     });
 
     it("should map slice names exactly as capabilities.json", () => {
