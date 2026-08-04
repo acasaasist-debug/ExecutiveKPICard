@@ -80,7 +80,7 @@ export class KpiRenderer {
         if (topLineOn) {
             const topLineUseStatusColor = generalCard.topLineUseStatusColor;
             const customTopLineColor = generalCard.topLineColor;
-            const lineColor = topLineUseStatusColor && state.status ? state.status.color : customTopLineColor;
+            const lineColor = topLineUseStatusColor && state.status ? state.calculatedStatusColor : customTopLineColor;
             
             const w = layout.viewport.width;
             const h = layout.accent.height;
@@ -165,57 +165,73 @@ export class KpiRenderer {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.comparisonGroup);
         SvgFactory.clearGroup(group);
 
-        if (!layout.showComparison || !layout.comparisonPeriod || !layout.variation || !state.comparison) return;
+        if (!layout.showComparison || !state.comparison) return;
+        
+        const compSettings = state.settings.comparison;
+        if (!compSettings.show) return;
 
         // Period
-        const periodText = SvgFactory.createText(SVGConstants.classes.periodText);
-        periodText.setAttribute("x", layout.comparisonPeriod.x.toString());
-        periodText.setAttribute("y", layout.comparisonPeriod.y.toString());
-        periodText.setAttribute("text-anchor", layout.comparisonPeriod.textAnchor || "start");
-        periodText.style.fontSize = `${layout.comparisonPeriod.fontSize}px`;
-        
-        const truncatedPeriod = TextUtils.truncateText(state.comparison.period || "", layout.comparisonPeriod.width || 50, layout.comparisonPeriod.fontSize || 12, SVGConstants.fontFamilies.primary);
-        periodText.textContent = truncatedPeriod;
-        group.appendChild(periodText);
+        if (compSettings.showPeriod && layout.comparisonPeriod) {
+            const rawPeriod = state.comparison.period || compSettings.defaultPeriodText;
+            if (rawPeriod && rawPeriod.trim() !== "") {
+                const periodText = SvgFactory.createText(SVGConstants.classes.periodText);
+                periodText.setAttribute("x", layout.comparisonPeriod.x.toString());
+                periodText.setAttribute("y", layout.comparisonPeriod.y.toString());
+                periodText.setAttribute("text-anchor", layout.comparisonPeriod.textAnchor || "start");
+                periodText.style.fontSize = `${layout.comparisonPeriod.fontSize}px`;
+                periodText.style.fontFamily = compSettings.fontFamily;
+                
+                const truncatedPeriod = TextUtils.truncateText(rawPeriod, layout.comparisonPeriod.width || 50, layout.comparisonPeriod.fontSize || 12, compSettings.fontFamily);
+                periodText.textContent = truncatedPeriod;
+                group.appendChild(periodText);
+            }
+        }
 
         // Variation
-        const varGroup = SvgFactory.createElement("g");
-        const variationStr = state.comparison.formattedVariation || "";
-        
-        const varText = SvgFactory.createText(SVGConstants.classes.variationText);
-        varText.setAttribute("x", layout.variation.x.toString());
-        varText.setAttribute("y", layout.variation.y.toString());
-        varText.setAttribute("text-anchor", layout.variation.textAnchor || "end");
-        varText.style.fontSize = `${layout.variation.fontSize}px`;
-        varText.textContent = variationStr;
-        
-        if (state.comparison.color) {
-            varText.style.fill = state.comparison.color;
-        }
-
-        varGroup.appendChild(varText);
-        
-        // Icon (trend)
-        if (state.comparison.trendIcon) {
-            const varTextWidth = TextUtils.measureTextWidth(variationStr, layout.variation.fontSize || 12, SVGConstants.fontFamilies.primary, SVGConstants.fontWeights.semibold);
+        if (compSettings.showVariation && layout.variation) {
+            const varGroup = SvgFactory.createElement("g");
+            const hasVariation = state.comparison.formattedVariation !== "";
+            const variationStr = hasVariation ? state.comparison.formattedVariation : compSettings.noComparisonText;
             
-            const iconX = layout.variation.x - varTextWidth - 8; 
-            const iconY = layout.variation.y; 
+            const varText = SvgFactory.createText(SVGConstants.classes.variationText);
+            varText.setAttribute("x", layout.variation.x.toString());
+            varText.setAttribute("y", layout.variation.y.toString());
+            varText.setAttribute("text-anchor", layout.variation.textAnchor || "end");
+            varText.style.fontSize = `${layout.variation.fontSize}px`;
+            varText.style.fontFamily = compSettings.fontFamily;
+            varText.textContent = variationStr;
             
-            const iconText = SvgFactory.createText(SVGConstants.classes.variationIcon);
-            iconText.setAttribute("x", iconX.toString());
-            iconText.setAttribute("y", iconY.toString());
-            iconText.setAttribute("text-anchor", "end");
-            iconText.style.fontSize = `${layout.variation.fontSize || 12}px`;
-            iconText.textContent = state.comparison.trendIcon;
-            
-            if (state.comparison.color) {
-                iconText.style.fill = state.comparison.color;
+            if (hasVariation && state.calculatedVariationColor) {
+                varText.style.fill = state.calculatedVariationColor;
+            } else if (!hasVariation) {
+                varText.style.fill = compSettings.neutralColor;
             }
-            varGroup.appendChild(iconText);
-        }
 
-        group.appendChild(varGroup);
+            varGroup.appendChild(varText);
+            
+            // Icon (trend)
+            if (hasVariation && compSettings.showArrow && state.comparison.trendIcon) {
+                const varTextWidth = TextUtils.measureTextWidth(variationStr, layout.variation.fontSize || 12, compSettings.fontFamily, SVGConstants.fontWeights.normal);
+                
+                const iconX = layout.variation.x - varTextWidth - 8; 
+                const iconY = layout.variation.y; 
+                
+                const iconText = SvgFactory.createText(SVGConstants.classes.variationIcon);
+                iconText.setAttribute("x", iconX.toString());
+                iconText.setAttribute("y", iconY.toString());
+                iconText.setAttribute("text-anchor", "end");
+                iconText.style.fontSize = `${layout.variation.fontSize || 12}px`;
+                iconText.style.fontFamily = compSettings.fontFamily;
+                iconText.textContent = state.comparison.trendIcon;
+                
+                if (state.calculatedVariationColor) {
+                    iconText.style.fill = state.calculatedVariationColor;
+                }
+                varGroup.appendChild(iconText);
+            }
+
+            group.appendChild(varGroup);
+        }
     }
 
     private static renderTarget(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
@@ -223,15 +239,20 @@ export class KpiRenderer {
         SvgFactory.clearGroup(group);
 
         if (!layout.showTarget || !layout.target || !state.target) return;
+        
+        const targetSettings = state.settings.target;
+        if (!targetSettings.show) return;
 
         const text = SvgFactory.createText(SVGConstants.classes.targetText);
         text.setAttribute("x", layout.target.x.toString());
         text.setAttribute("y", layout.target.y.toString());
         text.setAttribute("text-anchor", layout.target.textAnchor || "start");
         text.style.fontSize = `${layout.target.fontSize}px`;
+        text.style.fontFamily = targetSettings.fontFamily;
+        text.style.fill = targetSettings.color;
         
-        const targetStr = `Meta: ${state.target.formattedValue}`;
-        const truncated = TextUtils.truncateText(targetStr, layout.target.width || layout.viewport.width, layout.target.fontSize || 12, SVGConstants.fontFamilies.primary);
+        const targetStr = `${targetSettings.label}${state.target.formattedValue}`;
+        const truncated = TextUtils.truncateText(targetStr, layout.target.width || layout.viewport.width, layout.target.fontSize || 12, targetSettings.fontFamily);
         text.textContent = truncated;
         
         group.appendChild(text);
@@ -242,16 +263,24 @@ export class KpiRenderer {
         SvgFactory.clearGroup(group);
 
         if (!layout.showProgress || !layout.progress || !state.achievement) return;
+        
+        const progressSettings = state.settings.progress;
+        if (!progressSettings.show) return;
 
+        const radius = progressSettings.effectiveRadius;
+        
         // Track
         const track = SvgFactory.createRect(SVGConstants.classes.progressTrack);
         track.setAttribute("x", layout.progress.track.x.toString());
         track.setAttribute("y", layout.progress.track.y.toString());
         track.setAttribute("width", layout.progress.track.width.toString());
         track.setAttribute("height", layout.progress.track.height.toString());
-        track.setAttribute("rx", (layout.progress.track.height / 2).toString());
-        track.setAttribute("ry", (layout.progress.track.height / 2).toString());
+        track.setAttribute("rx", radius.toString());
+        track.setAttribute("ry", radius.toString());
+        track.style.fill = progressSettings.backgroundColor;
         group.appendChild(track);
+
+        const fillColor = progressSettings.useStatusColor ? state.calculatedStatusColor : progressSettings.customColor;
 
         // Fill
         if (layout.progress.fill.width > 0) {
@@ -260,11 +289,9 @@ export class KpiRenderer {
             fill.setAttribute("y", layout.progress.fill.y.toString());
             fill.setAttribute("width", layout.progress.fill.width.toString());
             fill.setAttribute("height", layout.progress.fill.height.toString());
-            fill.setAttribute("rx", (layout.progress.fill.height / 2).toString());
-            fill.setAttribute("ry", (layout.progress.fill.height / 2).toString());
-            if (state.status && state.status.color) {
-                fill.style.fill = state.status.color;
-            }
+            fill.setAttribute("rx", radius.toString());
+            fill.setAttribute("ry", radius.toString());
+            fill.style.fill = fillColor;
             group.appendChild(fill);
         }
 
@@ -275,21 +302,21 @@ export class KpiRenderer {
             marker.setAttribute("y", layout.progress.overperformanceMarker.y.toString());
             marker.setAttribute("width", layout.progress.overperformanceMarker.width.toString());
             marker.setAttribute("height", layout.progress.overperformanceMarker.height.toString());
-            if (state.status && state.status.color) {
-                marker.style.fill = state.status.color;
-            }
+            marker.style.fill = progressSettings.markColor;
             group.appendChild(marker);
         }
 
         // Achievement Text
-        const text = SvgFactory.createText(SVGConstants.classes.achievementText);
-        text.setAttribute("x", layout.progress.achievementText.x.toString());
-        text.setAttribute("y", layout.progress.achievementText.y.toString());
-        text.setAttribute("text-anchor", layout.progress.achievementText.textAnchor || "end");
-        text.style.fontSize = `${layout.progress.achievementText.fontSize}px`;
-        text.textContent = state.achievement.formattedValue;
-        
-        group.appendChild(text);
+        if (layout.progress.achievementText) {
+            const text = SvgFactory.createText(SVGConstants.classes.achievementText);
+            text.setAttribute("x", layout.progress.achievementText.x.toString());
+            text.setAttribute("y", layout.progress.achievementText.y.toString());
+            text.setAttribute("text-anchor", layout.progress.achievementText.textAnchor || "end");
+            text.style.fontSize = `${layout.progress.achievementText.fontSize}px`;
+            text.style.fill = progressSettings.percentageColor;
+            text.textContent = state.achievement.formattedValue;
+            group.appendChild(text);
+        }
     }
 
     private static renderStatus(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
@@ -303,8 +330,8 @@ export class KpiRenderer {
         circle.setAttribute("cx", layout.statusIndicator.x.toString());
         circle.setAttribute("cy", layout.statusIndicator.y.toString());
         circle.setAttribute("r", layout.statusIndicator.radius.toString());
-        if (state.status.color) {
-            circle.style.fill = state.status.color;
+        if (state.calculatedStatusColor) {
+            circle.style.fill = state.calculatedStatusColor;
         }
         group.appendChild(circle);
 
@@ -317,8 +344,8 @@ export class KpiRenderer {
         
         const truncated = TextUtils.truncateText(state.status.text, layout.statusText.width || 100, layout.statusText.fontSize || 12, SVGConstants.fontFamilies.primary);
         text.textContent = truncated;
-        if (state.status.color) {
-            text.style.fill = state.status.color;
+        if (state.calculatedStatusColor) {
+            text.style.fill = state.calculatedStatusColor;
         }
 
         group.appendChild(text);

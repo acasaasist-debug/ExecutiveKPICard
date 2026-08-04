@@ -59,4 +59,62 @@ export class NumberFormattingService {
 
         return formattedText;
     }
+
+    public formatTarget(
+        target: number | null,
+        targetFormat: string | undefined,
+        actualValueFormat: string | undefined,
+        inheritValueFormat: boolean,
+        actualValueOptions: {
+            useModelFormat: boolean;
+            displayUnits: number;
+            decimalPlaces: number;
+            prefix: string;
+            suffix: string;
+            thousandsSeparator: boolean;
+        },
+        targetOptions: {
+            displayUnits: number;
+            decimalPlaces: number;
+            prefix: string;
+            suffix: string;
+        }
+    ): string {
+        if (!isFiniteNumber(target)) {
+            return "";
+        }
+
+        if (inheritValueFormat) {
+            if (actualValueOptions.useModelFormat) {
+                return this.format(target, { 
+                    formatString: targetFormat || actualValueFormat 
+                });
+            } else {
+                return this.format(target, {
+                    useModelFormat: false,
+                    displayUnits: actualValueOptions.displayUnits,
+                    decimalPlaces: actualValueOptions.decimalPlaces,
+                    prefix: actualValueOptions.prefix,
+                    suffix: actualValueOptions.suffix,
+                    thousandsSeparator: actualValueOptions.thousandsSeparator
+                });
+            }
+        } else {
+            return this.format(target, {
+                useModelFormat: false,
+                displayUnits: targetOptions.displayUnits,
+                decimalPlaces: targetOptions.decimalPlaces,
+                prefix: targetOptions.prefix,
+                suffix: targetOptions.suffix
+            });
+        }
+    }
+
+    public formatPercentage(value: number | null, decimals: number): string {
+        if (!isFiniteNumber(value)) {
+            return "";
+        }
+        const formatString = "0" + (decimals > 0 ? "." + "0".repeat(decimals) : "") + " %";
+        return this.format(value, { formatString });
+    }
 }

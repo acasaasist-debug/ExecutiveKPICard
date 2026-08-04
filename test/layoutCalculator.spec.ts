@@ -51,6 +51,15 @@ describe("LayoutCalculator", () => {
             suffix: "",
             thousandsSeparator: true,
             showDashIfNull: true
+        },
+        comparison: {
+            show: true, showPeriod: true, defaultPeriodText: "vs prior", showVariation: true, showArrow: true, fontFamily: "Arial", fontSize: 12, positiveColor: "#16A34A", negativeColor: "#DC2626", neutralColor: "#6B7280", invertLogic: false, percentageDecimals: 1, noComparisonText: "-"
+        },
+        target: {
+            show: true, inheritValueFormat: true, label: "Meta: ", fontFamily: "Arial", fontSize: 12, color: "#6B7280", displayUnits: 0, decimalPlaces: 0, prefix: "", suffix: ""
+        },
+        progress: {
+            show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
         }
     });
 
@@ -65,12 +74,13 @@ describe("LayoutCalculator", () => {
             formattedVariation: "+5.0 %",
             trend: "up",
             trendIcon: "▲",
-            isFavorable: true,
-            color: "#16A34A"
+            isFavorable: true
         },
         target: { formattedValue: "1,000" },
         achievement: { formattedValue: "123%", progressRatio: 1.23 },
-        status: { text: "On Track", color: "green" }
+        calculatedVariationColor: "#16A34A",
+        calculatedStatusColor: "green",
+        status: { text: "On Track" }
     });
 
     describe("Mode Determination", () => {
@@ -172,6 +182,8 @@ describe("LayoutCalculator", () => {
                 hasData: true,
                 hasActualValueRole: true,
                 settings: createDummySettings(),
+                calculatedVariationColor: null,
+                calculatedStatusColor: "",
                 actual: { formattedValue: "1M" }
             };
             const layout = calculator.calculate({ width: 300, height: 220 }, state);
@@ -182,5 +194,186 @@ describe("LayoutCalculator", () => {
             expect(layout.showStatus).toBe(false);
             expect(layout.value).toBeDefined();
         });
+
+        it("hides comparison and frees space if settings.comparison.show is false", () => {
+            const state = createDummyState();
+            state.settings.comparison.show = false;
+            
+            const layoutWithFalse = calculator.calculate({ width: 300, height: 220 }, state);
+            
+            expect(layoutWithFalse.showComparison).toBe(false);
+            expect(layoutWithFalse.comparisonPeriod).toBeUndefined();
+        });
+
+        it("hides target and frees space if settings.target.show is false", () => {
+            const state = createDummyState();
+            state.settings.target.show = false;
+            
+            const layoutWithFalse = calculator.calculate({ width: 300, height: 220 }, state);
+            
+            expect(layoutWithFalse.showTarget).toBe(false);
+            expect(layoutWithFalse.target).toBeUndefined();
+        });
+
+        it("hides progress and frees space if settings.progress.show is false", () => {
+            const state = createDummyState();
+            state.settings.progress.show = false;
+            
+            const layoutWithFalse = calculator.calculate({ width: 300, height: 220 }, state);
+            
+            expect(layoutWithFalse.showProgress).toBe(false);
+            expect(layoutWithFalse.progress).toBeUndefined();
+        });
+    describe("Adaptive Vertical Distribution", () => {
+        it("300x220 conserva la composición base", () => {
+            const layout = calculator.calculate({ width: 300, height: 220 }, createDummyState());
+            expect(layout.title!.y).toBeGreaterThan(16);
+            expect(layout.value!.y).toBeGreaterThan(layout.title!.y);
+        });
+
+        it("300x300 aumenta gaps", () => {
+            const layout220 = calculator.calculate({ width: 300, height: 220 }, createDummyState());
+            const layout300 = calculator.calculate({ width: 300, height: 300 }, createDummyState());
+            
+            const gap220 = layout220.value!.y - layout220.title!.y;
+            const gap300 = layout300.value!.y - layout300.title!.y;
+            
+            expect(gap300).toBeGreaterThan(gap220);
+        });
+
+        it("300x400 mueve el estado hacia abajo", () => {
+            const layout220 = calculator.calculate({ width: 300, height: 220 }, createDummyState());
+            const layout400 = calculator.calculate({ width: 300, height: 400 }, createDummyState());
+            
+            expect(layout400.statusText!.y).toBeGreaterThan(layout220.statusText!.y);
+        });
+
+        it("300x600 alcanza maxGap y centra el bloque", () => {
+            const layout400 = calculator.calculate({ width: 300, height: 400 }, createDummyState());
+            const layout600 = calculator.calculate({ width: 300, height: 600 }, createDummyState());
+            
+            // Gaps should not grow indefinitely, so internal distances stabilize
+            const internalHeight400 = layout400.statusText!.y - layout400.title!.y;
+            const internalHeight600 = layout600.statusText!.y - layout600.title!.y;
+            
+            // If they both reached max gaps (or close), they should be similar
+            // They might differ slightly if 400 didn't fully reach max gap
+            expect(internalHeight600).toBeGreaterThanOrEqual(internalHeight400);
+            
+            // topOffset should be significant in 600
+            const topSpace = layout600.title!.y - layout600.title!.fontSize!; 
+            // Bottom space should be roughly equal to top space
+            const bottomSpace = 600 - layout600.statusText!.y;
+            expect(Math.abs(topSpace - bottomSpace)).toBeLessThan(20);
+        });
+
+        it("260x190 conserva NORMAL", () => {
+            const layout = calculator.calculate({ width: 260, height: 190 }, createDummyState());
+            expect(layout.mode).toBe(LayoutMode.NORMAL);
+        });
+
+        it("240x300 aplica el modo definido por ancho (COMPACT)", () => {
+            const layout = calculator.calculate({ width: 240, height: 300 }, createDummyState());
+            expect(layout.mode).toBe(LayoutMode.COMPACT);
+        });
+
+        it("180x300 aplica COMPACT", () => {
+            const layout = calculator.calculate({ width: 180, height: 300 }, createDummyState());
+            expect(layout.mode).toBe(LayoutMode.COMPACT);
+        });
+
+        it("140x400 aplica MINIMUM", () => {
+            const layout = calculator.calculate({ width: 140, height: 400 }, createDummyState());
+            expect(layout.mode).toBe(LayoutMode.MINIMUM);
+        });
+
+        it("Ocultar Título redistribuye", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            state.settings.title.show = false;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            // Should shift value upwards or center differently
+            expect(layoutHidden.value!.y).not.toEqual(layoutFull.value!.y);
+        });
+
+        it("Ocultar Comparación redistribuye", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            state.settings.comparison.show = false;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            expect(layoutHidden.target!.y).not.toEqual(layoutFull.target!.y);
+        });
+
+        it("Ocultar Meta redistribuye", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            state.settings.target.show = false;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            expect(layoutHidden.progress!.track.y).not.toEqual(layoutFull.progress!.track.y);
+        });
+
+        it("Ocultar Progreso redistribuye", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            state.settings.progress.show = false;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            expect(layoutHidden.statusText!.y).not.toEqual(layoutFull.statusText!.y);
+        });
+
+        it("Ocultar Estado no deja gap huérfano y redistribuye", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            delete state.status;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            expect(layoutHidden.progress!.track.y).not.toEqual(layoutFull.progress!.track.y);
+        });
+
+        it("achievement=null no reserva bloque de progreso", () => {
+            const state = createDummyState();
+            const layoutFull = calculator.calculate({ width: 300, height: 300 }, state);
+            state.achievement = undefined;
+            const layoutHidden = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            expect(layoutHidden.showProgress).toBe(false);
+            expect(layoutHidden.statusText!.y).not.toEqual(layoutFull.statusText!.y);
+        });
+
+        it("Todas las coordenadas son finitas", () => {
+            const layout = calculator.calculate({ width: 300, height: 300 }, createDummyState());
+            expect(isFinite(layout.title!.y)).toBe(true);
+            expect(isFinite(layout.value!.y)).toBe(true);
+            expect(isFinite(layout.comparisonPeriod!.y)).toBe(true);
+            expect(isFinite(layout.target!.y)).toBe(true);
+            expect(isFinite(layout.progress!.track.y)).toBe(true);
+            expect(isFinite(layout.statusText!.y)).toBe(true);
+        });
+
+        it("Todos los elementos visibles quedan dentro del innerHeight", () => {
+            const layout = calculator.calculate({ width: 300, height: 220 }, createDummyState());
+            expect(layout.title!.y).toBeGreaterThanOrEqual(0);
+            expect(layout.statusText!.y).toBeLessThanOrEqual(220);
+        });
+
+        it("La altura real de Progreso considera percentageSize", () => {
+            const state = createDummyState();
+            state.settings.progress.height = 4;
+            state.settings.progress.percentageSize = 24;
+            state.settings.progress.showPercentage = true;
+            
+            const layoutWithPercent = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            state.settings.progress.showPercentage = false;
+            const layoutNoPercent = calculator.calculate({ width: 300, height: 300 }, state);
+            
+            // Gap should change because block height is different
+            expect(layoutWithPercent.statusText!.y).not.toEqual(layoutNoPercent.statusText!.y);
+        });
     });
 });
+});
+

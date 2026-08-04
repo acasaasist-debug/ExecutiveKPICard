@@ -25,7 +25,7 @@ export interface TextLayout extends Point {
 export interface ProgressLayout {
     track: RectLayout;
     fill: RectLayout;
-    achievementText: TextLayout;
+    achievementText?: TextLayout;
     isOverperforming: boolean;
     overperformanceMarker?: RectLayout;
 }

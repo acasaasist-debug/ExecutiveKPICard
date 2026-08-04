@@ -246,12 +246,300 @@ class ActualValueCard extends Card {
     ];
 }
 
+class ComparisonCard extends Card {
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+    
+    showPeriod = new formattingSettings.ToggleSwitch({
+        name: "showPeriod",
+        displayName: "Show Period",
+        value: true
+    });
+    
+    defaultPeriodText = new formattingSettings.TextInput({
+        name: "defaultPeriodText",
+        displayName: "Default Period Text",
+        value: "vs período anterior",
+        placeholder: ""
+    });
+    
+    showVariation = new formattingSettings.ToggleSwitch({
+        name: "showVariation",
+        displayName: "Show Variation",
+        value: true
+    });
+    
+    showArrow = new formattingSettings.ToggleSwitch({
+        name: "showArrow",
+        displayName: "Show Arrow",
+        value: true
+    });
+    
+    fontFamily = new formattingSettings.FontPicker({
+        name: "fontFamily",
+        displayName: "Font Family",
+        value: "Segoe UI"
+    });
+    
+    fontSize = new formattingSettings.NumUpDown({
+        name: "fontSize",
+        displayName: "Text Size",
+        value: 12
+    });
+    
+    positiveColor = new formattingSettings.ColorPicker({
+        name: "positiveColor",
+        displayName: "Positive Color",
+        value: { value: "#16A34A" }
+    });
+    
+    negativeColor = new formattingSettings.ColorPicker({
+        name: "negativeColor",
+        displayName: "Negative Color",
+        value: { value: "#DC2626" }
+    });
+    
+    neutralColor = new formattingSettings.ColorPicker({
+        name: "neutralColor",
+        displayName: "Neutral Color",
+        value: { value: "#6B7280" }
+    });
+    
+    invertLogic = new formattingSettings.ToggleSwitch({
+        name: "invertLogic",
+        displayName: "Invert Logic",
+        value: false
+    });
+    
+    percentageDecimals = new formattingSettings.NumUpDown({
+        name: "percentageDecimals",
+        displayName: "Percentage Decimals",
+        value: 1
+    });
+    
+    noComparisonText = new formattingSettings.TextInput({
+        name: "noComparisonText",
+        displayName: "No Comparison Text",
+        value: "-",
+        placeholder: ""
+    });
+
+    name: string = "comparison";
+    displayName: string = "Comparación";
+    slices: Slice[] = [
+        this.show,
+        this.showPeriod,
+        this.defaultPeriodText,
+        this.showVariation,
+        this.showArrow,
+        this.fontFamily,
+        this.fontSize,
+        this.positiveColor,
+        this.negativeColor,
+        this.neutralColor,
+        this.invertLogic,
+        this.percentageDecimals,
+        this.noComparisonText
+    ];
+}
+
+class TargetCard extends Card {
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+    
+    inheritValueFormat = new formattingSettings.ToggleSwitch({
+        name: "inheritValueFormat",
+        displayName: "Inherit Value Format",
+        value: true
+    });
+    
+    label = new formattingSettings.TextInput({
+        name: "label",
+        displayName: "Label",
+        value: "Meta: ",
+        placeholder: ""
+    });
+    
+    fontFamily = new formattingSettings.FontPicker({
+        name: "fontFamily",
+        displayName: "Font Family",
+        value: "Segoe UI"
+    });
+    
+    fontSize = new formattingSettings.NumUpDown({
+        name: "fontSize",
+        displayName: "Text Size",
+        value: 12
+    });
+    
+    color = new formattingSettings.ColorPicker({
+        name: "color",
+        displayName: "Color",
+        value: { value: "#6B7280" }
+    });
+    
+    displayUnits = new formattingSettings.AutoDropdown({
+        name: "displayUnits",
+        displayName: "Display Units",
+        value: 0
+    });
+    
+    decimalPlaces = new formattingSettings.NumUpDown({
+        name: "decimalPlaces",
+        displayName: "Decimal Places",
+        value: 0
+    });
+    
+    prefix = new formattingSettings.TextInput({
+        name: "prefix",
+        displayName: "Prefix",
+        value: "",
+        placeholder: ""
+    });
+    
+    suffix = new formattingSettings.TextInput({
+        name: "suffix",
+        displayName: "Suffix",
+        value: "",
+        placeholder: ""
+    });
+
+    name: string = "target";
+    displayName: string = "Meta";
+    slices: Slice[] = [
+        this.show,
+        this.inheritValueFormat,
+        this.label,
+        this.fontFamily,
+        this.fontSize,
+        this.color,
+        this.displayUnits,
+        this.decimalPlaces,
+        this.prefix,
+        this.suffix
+    ];
+}
+
+class ProgressCard extends Card {
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+    
+    height = new formattingSettings.NumUpDown({
+        name: "height",
+        displayName: "Height",
+        value: 10
+    });
+    
+    radius = new formattingSettings.NumUpDown({
+        name: "radius",
+        displayName: "Radius",
+        value: 4
+    });
+    
+    backgroundColor = new formattingSettings.ColorPicker({
+        name: "backgroundColor",
+        displayName: "Background Color",
+        value: { value: "#E5E7EB" }
+    });
+    
+    useStatusColor = new formattingSettings.ToggleSwitch({
+        name: "useStatusColor",
+        displayName: "Use Status Color",
+        value: true
+    });
+    
+    customColor = new formattingSettings.ColorPicker({
+        name: "customColor",
+        displayName: "Custom Color",
+        value: { value: "#3B82F6" }
+    });
+    
+    showPercentage = new formattingSettings.ToggleSwitch({
+        name: "showPercentage",
+        displayName: "Show Percentage",
+        value: true
+    });
+    
+    percentageSize = new formattingSettings.NumUpDown({
+        name: "percentageSize",
+        displayName: "Percentage Size",
+        value: 12
+    });
+    
+    percentageColor = new formattingSettings.ColorPicker({
+        name: "percentageColor",
+        displayName: "Percentage Color",
+        value: { value: "#6B7280" }
+    });
+    
+    decimalPlaces = new formattingSettings.NumUpDown({
+        name: "decimalPlaces",
+        displayName: "Decimal Places",
+        value: 0
+    });
+    
+    showOverachievementMark = new formattingSettings.ToggleSwitch({
+        name: "showOverachievementMark",
+        displayName: "Show Overachievement Mark",
+        value: true
+    });
+    
+    markColor = new formattingSettings.ColorPicker({
+        name: "markColor",
+        displayName: "Mark Color",
+        value: { value: "#111827" }
+    });
+    
+    markThickness = new formattingSettings.NumUpDown({
+        name: "markThickness",
+        displayName: "Mark Thickness",
+        value: 2
+    });
+
+    name: string = "progress";
+    displayName: string = "Barra de progreso";
+    slices: Slice[] = [
+        this.show,
+        this.height,
+        this.radius,
+        this.backgroundColor,
+        this.useStatusColor,
+        this.customColor,
+        this.showPercentage,
+        this.percentageSize,
+        this.percentageColor,
+        this.decimalPlaces,
+        this.showOverachievementMark,
+        this.markColor,
+        this.markThickness
+    ];
+}
+
 export class VisualFormattingSettingsModel extends Model {
     generalCard = new GeneralCard();
     titleCard = new TitleCard();
     actualValueCard = new ActualValueCard();
+    comparisonCard = new ComparisonCard();
+    targetCard = new TargetCard();
+    progressCard = new ProgressCard();
 
-    cards = [this.generalCard, this.titleCard, this.actualValueCard];
+    cards = [
+        this.generalCard, 
+        this.titleCard, 
+        this.actualValueCard,
+        this.comparisonCard,
+        this.targetCard,
+        this.progressCard
+    ];
     
     public populateVisibleProperties() {
         // GENERAL visibility
@@ -288,5 +576,55 @@ export class VisualFormattingSettingsModel extends Model {
         this.actualValueCard.prefix.visible = showFormatProps;
         this.actualValueCard.suffix.visible = showFormatProps;
         this.actualValueCard.thousandsSeparator.visible = showFormatProps;
+        
+        // COMPARISON visibility
+        const isComparisonVisible = this.comparisonCard.show.value;
+        this.comparisonCard.showPeriod.visible = isComparisonVisible;
+        this.comparisonCard.defaultPeriodText.visible = isComparisonVisible && this.comparisonCard.showPeriod.value;
+        this.comparisonCard.showVariation.visible = isComparisonVisible;
+        
+        const showVariationOptions = isComparisonVisible && this.comparisonCard.showVariation.value;
+        this.comparisonCard.showArrow.visible = showVariationOptions;
+        this.comparisonCard.fontFamily.visible = isComparisonVisible;
+        this.comparisonCard.fontSize.visible = isComparisonVisible;
+        this.comparisonCard.positiveColor.visible = showVariationOptions;
+        this.comparisonCard.negativeColor.visible = showVariationOptions;
+        this.comparisonCard.neutralColor.visible = showVariationOptions;
+        this.comparisonCard.invertLogic.visible = showVariationOptions;
+        this.comparisonCard.percentageDecimals.visible = showVariationOptions;
+        this.comparisonCard.noComparisonText.visible = showVariationOptions;
+        
+        // TARGET visibility
+        const isTargetVisible = this.targetCard.show.value;
+        this.targetCard.inheritValueFormat.visible = isTargetVisible;
+        this.targetCard.label.visible = isTargetVisible;
+        this.targetCard.fontFamily.visible = isTargetVisible;
+        this.targetCard.fontSize.visible = isTargetVisible;
+        this.targetCard.color.visible = isTargetVisible;
+        
+        const showTargetFormatProps = isTargetVisible && !this.targetCard.inheritValueFormat.value;
+        this.targetCard.displayUnits.visible = showTargetFormatProps;
+        this.targetCard.decimalPlaces.visible = showTargetFormatProps;
+        this.targetCard.prefix.visible = showTargetFormatProps;
+        this.targetCard.suffix.visible = showTargetFormatProps;
+        
+        // PROGRESS visibility
+        const isProgressVisible = this.progressCard.show.value;
+        this.progressCard.height.visible = isProgressVisible;
+        this.progressCard.radius.visible = isProgressVisible;
+        this.progressCard.backgroundColor.visible = isProgressVisible;
+        this.progressCard.useStatusColor.visible = isProgressVisible;
+        this.progressCard.customColor.visible = isProgressVisible && !this.progressCard.useStatusColor.value;
+        this.progressCard.showPercentage.visible = isProgressVisible;
+        
+        const showPercentageProps = isProgressVisible && this.progressCard.showPercentage.value;
+        this.progressCard.percentageSize.visible = showPercentageProps;
+        this.progressCard.percentageColor.visible = showPercentageProps;
+        this.progressCard.decimalPlaces.visible = showPercentageProps;
+        
+        this.progressCard.showOverachievementMark.visible = isProgressVisible;
+        const showMarkProps = isProgressVisible && this.progressCard.showOverachievementMark.value;
+        this.progressCard.markColor.visible = showMarkProps;
+        this.progressCard.markThickness.visible = showMarkProps;
     }
 }

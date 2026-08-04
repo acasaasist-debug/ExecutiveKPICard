@@ -16,7 +16,8 @@ import { KpiCalculationService } from "./services/kpiCalculationService";
 import { NumberFormattingService } from "./services/numberFormattingService";
 import { ColorService } from "./services/colorService";
 
-import { VisualState, Phase5ARenderSettings } from "./models/visualState";
+import { VisualState, RenderSettings } from "./models/visualState";
+import { normalizeRenderSettings } from "./utils/renderSettingsNormalizer";
 import { KpiData } from "./models/kpiData";
 import { KpiLayout } from "./models/layout";
 import { LayoutCalculator } from "./rendering/layoutCalculator";
@@ -26,7 +27,7 @@ import { SVGConstants } from "./constants/svg";
 import { SvgFactory } from "./rendering/svgFactory";
 
 // ── Build version stamp (update when packaging) ────────────────────────────
-const BUILD_VERSION = "1.0.0.2";
+const BUILD_VERSION = "1.0.0.4";
 
 export class Visual implements IVisual {
     private target!: HTMLElement;
@@ -74,17 +75,37 @@ export class Visual implements IVisual {
         this.updateSequence++;
 
         try {
-            // ── A. Parse the DataView ─────────────────────────────────
-            const dataView = options.dataViews?.[0];
+            // ── 0. Update SVG dimensions ────────────────────────────────
+            const width = Math.max(0, options.viewport.width);
+            const height = Math.max(0, options.viewport.height);
+            this.svgRoot.setAttribute("width", String(width));
+            this.svgRoot.setAttribute("height", String(height));
+            this.svgRoot.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-            // Populate formatting settings safely even when dataView is undefined.
-            // If dataView is absent, populateFormattingSettingsModel falls back to
-            // defaults, which is the correct behaviour for viewport-only updates.
+            // ── A. Parse the DataView or use last stable state ────────
+            const dataViews = options.dataViews;
+            const hasDataView = dataViews && dataViews.length > 0;
+            let dataView = hasDataView ? dataViews[0] : undefined;
+            
+            const formattingDataView = dataView ? dataView : { metadata: {} } as powerbi.DataView;
             this.formattingSettings = this.formattingSettingsService
-                .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
+                .populateFormattingSettingsModel(VisualFormattingSettingsModel, formattingDataView);
 
-            const parseResult = this.dataViewService.parse(dataView);
-            const { status, data: kpiData } = parseResult;
+            let status: DataViewReadStatus;
+            let kpiData: KpiData;
+            
+            if (hasDataView) {
+                const parseResult = this.dataViewService.parse(dataView);
+                status = parseResult.status;
+                kpiData = parseResult.data;
+            } else if (this.lastStableData && this.lastStableState) {
+                // Resize without DataView, reuse last stable data
+                status = DataViewReadStatus.StableValue; // or StableBlank, but both proceed
+                kpiData = this.lastStableData;
+            } else {
+                status = DataViewReadStatus.NoActualValueRole;
+                kpiData = { hasActualValueRole: false, actualValue: null, actualValueFormat: "" };
+            }
 
             // ── B. Structured diagnostic log (REMOVE before production) ─
             console.log(JSON.stringify({
@@ -163,6 +184,16 @@ export class Visual implements IVisual {
                 kpiData.statusColor, statusResult.autoColor
             );
 
+            // Build render settings from formatting cards
+            const renderSettings: RenderSettings = normalizeRenderSettings(
+                this.formattingSettings.generalCard,
+                this.formattingSettings.titleCard,
+                this.formattingSettings.actualValueCard,
+                this.formattingSettings.comparisonCard,
+                this.formattingSettings.targetCard,
+                this.formattingSettings.progressCard
+            );
+
             // Trend / variation color
             const trend = this.kpiCalculationService.calculateTrend(calculatedVariation);
             let finalTrendIcon: string | null = null;
@@ -171,59 +202,18 @@ export class Visual implements IVisual {
             } else if (trend !== "unavailable") {
                 finalTrendIcon = trend === "up" ? "▲" : (trend === "down" ? "▼" : "■");
             }
-            const invertLogic = false;
+            const invertLogic = renderSettings.comparison.invertLogic;
             const isFavorable = this.kpiCalculationService.isVariationFavorable(
                 calculatedVariation, invertLogic
             );
             const variationColor = this.colorService.getVariationColor(
-                kpiData.variationColor, calculatedVariation, invertLogic,
-                "#16A34A", "#DC2626", "#6B7280"
+                kpiData.variationColor, 
+                calculatedVariation, 
+                invertLogic,
+                renderSettings.comparison.positiveColor, 
+                renderSettings.comparison.negativeColor, 
+                renderSettings.comparison.neutralColor
             );
-
-            // Build render settings from formatting cards
-            const generalCard     = this.formattingSettings.generalCard;
-            const titleCard       = this.formattingSettings.titleCard;
-            const actualValueCard = this.formattingSettings.actualValueCard;
-
-            const renderSettings: Phase5ARenderSettings = {
-                general: {
-                    backgroundColor:      generalCard.backgroundColor.value.value,
-                    transparency:         generalCard.transparency.value,
-                    borderOn:             generalCard.borderOn.value,
-                    borderColor:          generalCard.borderColor.value.value,
-                    borderThickness:      generalCard.borderThickness.value,
-                    cornerRadius:         generalCard.cornerRadius.value,
-                    padding:              generalCard.padding.value,
-                    topLineOn:            generalCard.topLineOn.value,
-                    topLineUseStatusColor: generalCard.topLineUseStatusColor.value,
-                    topLineThickness:     generalCard.topLineThickness.value,
-                    topLineColor:         generalCard.topLineColor.value.value
-                },
-                title: {
-                    show:        titleCard.show.value,
-                    fontFamily:  titleCard.fontFamily.value,
-                    fontSize:    titleCard.fontSize.value,
-                    bold:        titleCard.bold.value,
-                    color:       titleCard.color.value.value,
-                    alignment:   titleCard.alignment.value as string,
-                    bottomMargin: titleCard.bottomMargin.value
-                },
-                actualValue: {
-                    show:             actualValueCard.show.value,
-                    useModelFormat:   actualValueCard.useModelFormat.value,
-                    fontFamily:       actualValueCard.fontFamily.value,
-                    fontSize:         actualValueCard.fontSize.value,
-                    bold:             actualValueCard.bold.value,
-                    color:            actualValueCard.color.value.value,
-                    alignment:        actualValueCard.alignment.value as string,
-                    displayUnits:     actualValueCard.displayUnits.value as number,
-                    decimalPlaces:    actualValueCard.decimalPlaces.value,
-                    prefix:           actualValueCard.prefix.value,
-                    suffix:           actualValueCard.suffix.value,
-                    thousandsSeparator: actualValueCard.thousandsSeparator.value,
-                    showDashIfNull:   actualValueCard.showDashIfNull.value
-                }
-            };
 
             // Format strings
             const actualStr = this.numberFormattingService.format(kpiData.actualValue, {
@@ -236,39 +226,52 @@ export class Visual implements IVisual {
                 thousandsSeparator: renderSettings.actualValue.thousandsSeparator,
                 showDashIfNull:     renderSettings.actualValue.showDashIfNull
             });
-            const targetStr = kpiData.target !== null && kpiData.target !== undefined
-                ? this.numberFormattingService.format(kpiData.target, { formatString: kpiData.targetFormat })
-                : "";
-            const varStr = calculatedVariation !== null
-                ? this.numberFormattingService.format(calculatedVariation, { formatString: "0.0 %" })
-                : "";
-            const achStr = calculatedAchievement !== null
-                ? this.numberFormattingService.format(calculatedAchievement, { formatString: "0.0 %" })
-                : "";
+
+            let targetStr = "";
+            if (kpiData.target !== null && kpiData.target !== undefined) {
+                targetStr = this.numberFormattingService.formatTarget(
+                    kpiData.target,
+                    kpiData.targetFormat,
+                    kpiData.actualValueFormat,
+                    renderSettings.target.inheritValueFormat,
+                    renderSettings.actualValue,
+                    renderSettings.target
+                );
+            }
+
+            const varStr = this.numberFormattingService.formatPercentage(
+                calculatedVariation,
+                renderSettings.comparison.percentageDecimals
+            );
+
+            const achStr = this.numberFormattingService.formatPercentage(
+                calculatedAchievement,
+                renderSettings.progress.decimalPlaces
+            );
 
             // Build VisualState
             const state: VisualState = {
                 hasData:           true,
                 hasActualValueRole: kpiData.hasActualValueRole,
                 settings:           renderSettings,
+                calculatedVariationColor: variationColor,
+                calculatedStatusColor: finalStatusColor,
                 title:              kpiData.title ? { text: kpiData.title } : undefined,
                 actual:             { formattedValue: actualStr },
-                comparison: calculatedVariation !== null ? {
+                comparison: {
                     period:             kpiData.comparisonPeriod || null,
                     formattedVariation: varStr,
                     trend,
                     trendIcon:          finalTrendIcon,
-                    isFavorable,
-                    color:              variationColor
-                } : undefined,
+                    isFavorable
+                },
                 target:      targetStr  ? { formattedValue: targetStr } : undefined,
                 achievement: calculatedAchievement !== null ? {
                     formattedValue: achStr,
                     progressRatio
                 } : undefined,
                 status: {
-                    text:  statusResult.text,
-                    color: finalStatusColor
+                    text:  statusResult.text
                 }
             };
 
@@ -283,7 +286,7 @@ export class Visual implements IVisual {
             // ── F. Persist stable state ───────────────────────────────
             this.lastStableData   = kpiData;
             this.lastStableState  = state;
-            this.lastStableLayout = layout;
+            this.lastStableLayout = layout; // Stored but not reused on resize
 
             this.events.renderingFinished(options);
 

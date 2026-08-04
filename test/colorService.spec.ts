@@ -56,19 +56,16 @@ describe("ColorService", () => {
     });
 
     describe("Variation Color", () => {
-        // 15. Variación cero usa neutral.
-        it("returns neutral color for null or zero variation", () => {
+        it("3. neutralColor automático", () => {
             expect(service.getVariationColor(undefined, null, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#6B7280");
             expect(service.getVariationColor(undefined, 0, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#6B7280");
         });
 
-        // 11. Variación positiva normal.
-        it("returns positive color for positive variation with normal logic", () => {
+        it("1. positiveColor automático", () => {
             expect(service.getVariationColor(undefined, 0.5, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#16A34A");
         });
 
-        // 12. Variación negativa normal.
-        it("returns negative color for negative variation with normal logic", () => {
+        it("2. negativeColor automático", () => {
             expect(service.getVariationColor(undefined, -0.5, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#DC2626");
         });
 
@@ -82,8 +79,11 @@ describe("ColorService", () => {
             expect(service.getVariationColor(undefined, -0.5, true, "#16A34A", "#DC2626", "#6B7280")).toBe("#16A34A");
         });
 
-        it("validates data-driven variation color", () => {
+        it("4. variationColor válido desde datos tiene prioridad", () => {
             expect(service.getVariationColor("#7C3AED", -0.5, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#7C3AED");
+        });
+
+        it("5. variationColor inválido usa color automático", () => {
             expect(service.getVariationColor("invalid", -0.5, false, "#16A34A", "#DC2626", "#6B7280")).toBe("#DC2626");
         });
     });

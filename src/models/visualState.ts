@@ -1,6 +1,6 @@
 import { VisualFormattingSettingsModel } from "../settings/formattingSettings";
 
-export interface Phase5ARenderSettings {
+export interface RenderSettings {
     general: {
         backgroundColor: string;
         transparency: number;
@@ -38,12 +38,58 @@ export interface Phase5ARenderSettings {
         thousandsSeparator: boolean;
         showDashIfNull: boolean;
     };
+    comparison: {
+        show: boolean;
+        showPeriod: boolean;
+        defaultPeriodText: string;
+        showVariation: boolean;
+        showArrow: boolean;
+        fontFamily: string;
+        fontSize: number;
+        positiveColor: string;
+        negativeColor: string;
+        neutralColor: string;
+        invertLogic: boolean;
+        percentageDecimals: number;
+        noComparisonText: string;
+    };
+    target: {
+        show: boolean;
+        inheritValueFormat: boolean;
+        label: string;
+        fontFamily: string;
+        fontSize: number;
+        color: string;
+        displayUnits: number;
+        decimalPlaces: number;
+        prefix: string;
+        suffix: string;
+    };
+    progress: {
+        show: boolean;
+        height: number;
+        effectiveRadius: number;
+        backgroundColor: string;
+        useStatusColor: boolean;
+        customColor: string;
+        showPercentage: boolean;
+        percentageSize: number;
+        percentageColor: string;
+        decimalPlaces: number;
+        showOverachievementMark: boolean;
+        markColor: string;
+        markThickness: number;
+    };
 }
+
+export type Phase5ARenderSettings = RenderSettings;
 
 export interface VisualState {
     hasData: boolean;
     hasActualValueRole: boolean;
-    settings: Phase5ARenderSettings;
+    settings: RenderSettings;
+    calculatedVariationColor: string | null;
+    calculatedStatusColor: string;
     title?: {
         text: string;
     };
@@ -56,7 +102,6 @@ export interface VisualState {
         trend: "up" | "down" | "neutral" | "unavailable";
         trendIcon: string | null;
         isFavorable: boolean;
-        color: string | null;
     };
     target?: {
         formattedValue: string;
@@ -67,6 +112,5 @@ export interface VisualState {
     };
     status?: {
         text: string;
-        color: string;
     };
 }

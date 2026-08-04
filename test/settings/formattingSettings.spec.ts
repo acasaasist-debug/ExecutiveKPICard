@@ -7,8 +7,8 @@ describe("VisualFormattingSettingsModel", () => {
         model = new VisualFormattingSettingsModel();
     });
 
-    it("should create General, Title and ActualValue cards", () => {
-        expect(model.cards.length).toBe(3);
+    it("should create General, Title, ActualValue, Comparison, Target, Progress cards", () => {
+        expect(model.cards.length).toBe(6);
         expect(model.generalCard.name).toBe("general");
         expect(model.titleCard.name).toBe("title");
         expect(model.actualValueCard.name).toBe("actualValue");
@@ -60,5 +60,46 @@ describe("VisualFormattingSettingsModel", () => {
         model.populateVisibleProperties();
         expect(model.actualValueCard.displayUnits.visible).toBe(true);
         expect(model.actualValueCard.decimalPlaces.visible).toBe(true);
+    });
+
+    it("should hide manual options of target if inheritValueFormat is true", () => {
+        model.targetCard.show.value = true;
+        model.targetCard.inheritValueFormat.value = true;
+        model.populateVisibleProperties();
+        expect(model.targetCard.displayUnits.visible).toBe(false);
+        expect(model.targetCard.decimalPlaces.visible).toBe(false);
+        expect(model.targetCard.prefix.visible).toBe(false);
+        expect(model.targetCard.suffix.visible).toBe(false);
+
+        model.targetCard.inheritValueFormat.value = false;
+        model.populateVisibleProperties();
+        expect(model.targetCard.displayUnits.visible).toBe(true);
+        expect(model.targetCard.decimalPlaces.visible).toBe(true);
+        expect(model.targetCard.prefix.visible).toBe(true);
+        expect(model.targetCard.suffix.visible).toBe(true);
+    });
+
+    it("should ensure visibility logic does not alter slice values for comparison", () => {
+        model.comparisonCard.show.value = false;
+        model.comparisonCard.fontSize.value = 24;
+        model.populateVisibleProperties();
+        expect(model.comparisonCard.fontSize.visible).toBe(false);
+        expect(model.comparisonCard.fontSize.value).toBe(24);
+    });
+
+    it("should ensure visibility logic does not alter slice values for target", () => {
+        model.targetCard.show.value = false;
+        model.targetCard.fontSize.value = 24;
+        model.populateVisibleProperties();
+        expect(model.targetCard.fontSize.visible).toBe(false);
+        expect(model.targetCard.fontSize.value).toBe(24);
+    });
+
+    it("should ensure visibility logic does not alter slice values for progress", () => {
+        model.progressCard.show.value = false;
+        model.progressCard.height.value = 10;
+        model.populateVisibleProperties();
+        expect(model.progressCard.height.visible).toBe(false);
+        expect(model.progressCard.height.value).toBe(10);
     });
 });

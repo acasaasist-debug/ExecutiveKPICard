@@ -33,6 +33,15 @@ const dummySettings = (): any => ({
         show: true, useModelFormat: true, fontFamily: "Segoe UI", fontSize: 32, bold: true,
         color: "#111827", alignment: "center", displayUnits: 0, decimalPlaces: 0,
         prefix: "", suffix: "", thousandsSeparator: true, showDashIfNull: true
+    },
+    comparison: {
+        show: true, showPeriod: true, defaultPeriodText: "vs prior", showVariation: true, showArrow: true, fontFamily: "Arial", fontSize: 12, positiveColor: "#16A34A", negativeColor: "#DC2626", neutralColor: "#6B7280", invertLogic: false, percentageDecimals: 1, noComparisonText: "-"
+    },
+    target: {
+        show: true, inheritValueFormat: true, label: "Meta: ", fontFamily: "Arial", fontSize: 12, color: "#6B7280", displayUnits: 0, decimalPlaces: 0, prefix: "", suffix: ""
+    },
+    progress: {
+        show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
     }
 });
 
@@ -43,7 +52,9 @@ function buildState(withTitle: boolean, value = "1,234"): VisualState {
         settings: dummySettings(),
         title: withTitle ? { text: "My KPI" } : undefined,
         actual: { formattedValue: value },
-        status: { text: "OK", color: "#16A34A" }
+        calculatedVariationColor: null,
+        calculatedStatusColor: "#16A34A",
+        status: { text: "OK" }
     };
 }
 
@@ -211,5 +222,126 @@ describe("DataViewService – stable vs transient semantics", () => {
         // The caller SHOULD save this as lastStableState.
         expect(result.data.hasActualValueRole).toBe(true);
         expect(result.data.actualValue).toBeNull();
+    });
+});
+
+import { Visual } from "../src/visual";
+import powerbi from "powerbi-visuals-api";
+import { VisualFormattingSettingsModel } from "../src/settings/formattingSettings";
+
+describe("Visual - Resize Lifecycle Integration", () => {
+    let visual: Visual;
+    let element: HTMLElement;
+    let host: any;
+    let events: any;
+    let formattingSettingsService: any;
+
+    beforeEach(() => {
+        element = document.createElement("div");
+        document.body.appendChild(element);
+
+        host = {
+            createSelectionIdBuilder: jest.fn().mockReturnValue({
+                withCategory: jest.fn().mockReturnThis(),
+                withMeasure: jest.fn().mockReturnThis(),
+                createSelectionId: jest.fn().mockReturnValue({})
+            }),
+            colorPalette: { getColor: jest.fn().mockReturnValue({ value: "#000000" }) },
+            tooltipService: { enabled: jest.fn(), show: jest.fn(), move: jest.fn(), hide: jest.fn() }
+        };
+        events = { renderingStarted: jest.fn(), renderingFinished: jest.fn(), renderingFailed: jest.fn((options, err) => console.error("RENDERING FAILED:", err)) };
+        formattingSettingsService = { populateFormattingSettingsModel: jest.fn().mockReturnValue(new VisualFormattingSettingsModel()) };
+
+        const options: any = { element, host };
+        visual = new Visual(options);
+        visual["events"] = events;
+        visual["formattingSettingsService"] = formattingSettingsService;
+        
+        const mockCtx = { measureText: jest.fn().mockReturnValue({ width: 50 }), font: "" };
+        HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue(mockCtx) as any;
+    });
+
+    afterEach(() => {
+        document.body.removeChild(element);
+        jest.clearAllMocks();
+    });
+
+    const createValidDataView = (): powerbi.DataView => ({
+        metadata: { columns: [
+            { roles: { title: true }, type: { text: true } as any },
+            { roles: { actualValue: true }, type: { numeric: true } as any }
+        ], objects: {} },
+        table: { rows: [["Sales", 1000]] }
+    } as any);
+
+    it("Resize Lifecycle behaves correctly", () => {
+        const svgRoot = element.querySelector("svg")!;
+        
+        // 1. Initial 300x220 render
+        visual.update({
+            type: powerbi.VisualUpdateType.Data,
+            viewport: { width: 300, height: 220 },
+            dataViews: [createValidDataView()]
+        } as any);
+        
+        expect(svgRoot.getAttribute("width")).toBe("300");
+        expect(svgRoot.getAttribute("height")).toBe("220");
+        expect(svgRoot.getAttribute("viewBox")).toBe("0 0 300 220");
+        
+        const landingPage = element.querySelector(`g.${SVGConstants.classes.landingPageGroup}`);
+        expect(landingPage ? landingPage.children.length : 0).toBe(0); // Not shown
+
+        const statusGroup220 = element.querySelector(`g.${SVGConstants.classes.statusGroup}`);
+        const statusText220 = statusGroup220?.querySelector("text");
+        console.log("SVG HTML:", svgRoot.innerHTML);
+        const y220 = Number(statusText220?.getAttribute("y"));
+        expect(y220).toBeGreaterThan(0);
+
+        // 2. Resize to 300x400 without DataView recalculates coordinates
+        visual.update({
+            type: powerbi.VisualUpdateType.Resize,
+            viewport: { width: 300, height: 400 },
+            dataViews: undefined // Missing dataviews entirely
+        } as any);
+
+        // 3. SVG root does not change reference
+        expect(element.querySelector("svg")).toBe(svgRoot);
+        expect(svgRoot.getAttribute("height")).toBe("400");
+        
+        // 4. Nodes do not duplicate
+        expect(element.querySelectorAll(`g.${SVGConstants.classes.statusGroup}`).length).toBe(1);
+        
+        // 5. Value and data remain (state preserved)
+        expect(element.querySelector(`text.${SVGConstants.classes.valueText}`)?.textContent).toBe("1000"); // Using dummy settings or parsed mock format
+        
+        // 6. status.y increases
+        const statusText400 = element.querySelector(`g.${SVGConstants.classes.statusGroup}`)?.querySelector("text");
+        const y400 = Number(statusText400?.getAttribute("y"));
+        expect(y400).toBeGreaterThan(y220);
+        
+        // 7. Resize back to 300x220 restores distribution
+        visual.update({
+            type: powerbi.VisualUpdateType.Resize,
+            viewport: { width: 300, height: 220 },
+            dataViews: [] // Empty array
+        } as any);
+        const yRestored = Number(element.querySelector(`g.${SVGConstants.classes.statusGroup}`)?.querySelector("text")?.getAttribute("y"));
+        expect(yRestored).toBe(y220);
+        
+        // 8. Resize to 300x600 centers block
+        visual.update({
+            type: powerbi.VisualUpdateType.Resize,
+            viewport: { width: 300, height: 600 },
+            dataViews: []
+        } as any);
+        const y600 = Number(element.querySelector(`g.${SVGConstants.classes.statusGroup}`)?.querySelector("text")?.getAttribute("y"));
+        expect(y600).toBeGreaterThan(y400); // 400 vs 600 means gap capped and block centered
+        
+        // 9. width, height, viewBox updated on every call (verified above)
+        expect(svgRoot.getAttribute("viewBox")).toBe("0 0 300 600");
+
+        // 10. Landing Page not shown
+        const landingPageAfter = element.querySelector(`g.${SVGConstants.classes.landingPageGroup}`);
+        expect(landingPageAfter ? landingPageAfter.children.length : 0).toBe(0);
     });
 });

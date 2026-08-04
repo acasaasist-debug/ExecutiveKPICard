@@ -64,6 +64,15 @@ describe("KpiRenderer", () => {
             suffix: "",
             thousandsSeparator: true,
             showDashIfNull: true
+        },
+        comparison: {
+            show: true, showPeriod: true, defaultPeriodText: "vs prior", showVariation: true, showArrow: true, fontFamily: "Arial", fontSize: 12, positiveColor: "#16A34A", negativeColor: "#DC2626", neutralColor: "#6B7280", invertLogic: false, percentageDecimals: 1, noComparisonText: "-"
+        },
+        target: {
+            show: true, inheritValueFormat: true, label: "Meta: ", fontFamily: "Arial", fontSize: 12, color: "#6B7280", displayUnits: 0, decimalPlaces: 0, prefix: "", suffix: ""
+        },
+        progress: {
+            show: true, height: 4, radius: 2, backgroundColor: "#E5E7EB", useStatusColor: true, customColor: "#3B82F6", showPercentage: true, percentageSize: 12, percentageColor: "#6B7280", decimalPlaces: 0, showOverachievementMark: true, markColor: "#111827", markThickness: 2, effectiveRadius: 2
         }
     });
 
@@ -78,12 +87,13 @@ describe("KpiRenderer", () => {
             formattedVariation: "+5.0 %",
             trend: "up",
             trendIcon: "▲",
-            isFavorable: true,
-            color: "#16A34A"
+            isFavorable: true
         },
         target: { formattedValue: "1,000" },
         achievement: { formattedValue: "123%", progressRatio: 1.23 },
-        status: { text: "On Track", color: "#16A34A" }
+        calculatedVariationColor: "#16A34A",
+        calculatedStatusColor: "#16A34A",
+        status: { text: "On Track" }
     });
 
     const createDummyLayout = (): KpiLayout => ({
@@ -158,8 +168,8 @@ describe("KpiRenderer", () => {
     // 7. Test variation color applied to variation text and icon
     it("applies variation color to text and icon", () => {
         const state = createDummyState();
+        state.calculatedVariationColor = "#7C3AED";
         if (state.comparison) {
-            state.comparison.color = "#7C3AED";
             state.comparison.trendIcon = "▲";
         }
         KpiRenderer.render(svgRoot, createDummyLayout(), state);
@@ -185,10 +195,268 @@ describe("KpiRenderer", () => {
 
     it("accents color uses status color", () => {
         const state = createDummyState();
-        state.status!.color = "#FF0000";
+        state.calculatedStatusColor = "#FF0000";
         KpiRenderer.render(svgRoot, createDummyLayout(), state);
         
         const accentPath = svgRoot.querySelector(`path.${SVGConstants.classes.accentLine}`) as SVGPathElement;
         expect(accentPath.style.fill).toMatch(/rgb\(255, 0, 0\)|#FF0000/i);
+    });
+
+    describe("Comparison Group", () => {
+        it("hides only the period when showPeriod is false", () => {
+            const state = createDummyState();
+            state.settings.comparison.showPeriod = false;
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const periodText = svgRoot.querySelector(`text.${SVGConstants.classes.periodText}`);
+            const variationText = svgRoot.querySelector(`text.${SVGConstants.classes.variationText}`);
+            
+            expect(periodText).toBeNull();
+            expect(variationText).not.toBeNull();
+        });
+
+        it("hides variation and icon when showVariation is false", () => {
+            const state = createDummyState();
+            state.settings.comparison.showVariation = false;
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const variationText = svgRoot.querySelector(`text.${SVGConstants.classes.variationText}`);
+            const variationIcon = svgRoot.querySelector(`text.${SVGConstants.classes.variationIcon}`);
+            
+            expect(variationText).toBeNull();
+            expect(variationIcon).toBeNull();
+        });
+
+        it("hides icon only when showArrow is false", () => {
+            const state = createDummyState();
+            state.settings.comparison.showArrow = false;
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const variationText = svgRoot.querySelector(`text.${SVGConstants.classes.variationText}`);
+            const variationIcon = svgRoot.querySelector(`text.${SVGConstants.classes.variationIcon}`);
+            
+            expect(variationText).not.toBeNull();
+            expect(variationIcon).toBeNull();
+        });
+
+        it("uses data-driven period if available, else fallback", () => {
+            const state = createDummyState();
+            
+            // From data
+            state.comparison!.period = "Q3 2023";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            let periodText = svgRoot.querySelector(`text.${SVGConstants.classes.periodText}`);
+            expect(periodText?.textContent).toBe("Q3 2023");
+
+            // Fallback
+            state.comparison!.period = null;
+            state.settings.comparison.defaultPeriodText = "Fallback period";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            periodText = svgRoot.querySelector(`text.${SVGConstants.classes.periodText}`);
+            expect(periodText?.textContent).toBe("Fallback period");
+        });
+
+        it("hides element if both data period and fallback period are empty strings", () => {
+            const state = createDummyState();
+            state.comparison!.period = "";
+            state.settings.comparison.defaultPeriodText = "";
+            const layout = createDummyLayout();
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const periodText = svgRoot.querySelector(`text.${SVGConstants.classes.periodText}`);
+            expect(periodText).toBeNull();
+        });
+
+        it("shows noComparisonText when variation is null", () => {
+            const state = createDummyState();
+            state.comparison!.formattedVariation = ""; // indicates null/blank
+            state.settings.comparison.noComparisonText = "-";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const variationText = svgRoot.querySelector(`text.${SVGConstants.classes.variationText}`);
+            expect(variationText?.textContent).toBe("-");
+        });
+
+        it("does not show noComparisonText if showVariation is false", () => {
+            const state = createDummyState();
+            state.comparison!.formattedVariation = "";
+            state.settings.comparison.showVariation = false;
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const variationText = svgRoot.querySelector(`text.${SVGConstants.classes.variationText}`);
+            expect(variationText).toBeNull();
+        });
+    });
+
+    describe("Target Group", () => {
+        it("hides targetGroup when target is null", () => {
+            const state = createDummyState();
+            state.target = undefined;
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            const targetText = svgRoot.querySelector(`text.${SVGConstants.classes.targetText}`);
+            expect(targetText).toBeNull();
+        });
+
+        it("handles custom, default, and empty labels", () => {
+            const state = createDummyState();
+            
+            // Custom label
+            state.settings.target.label = "Goal: ";
+            state.target = { formattedValue: "1K" };
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            let targetText = svgRoot.querySelector(`text.${SVGConstants.classes.targetText}`);
+            expect(targetText?.textContent).toBe("Goal: 1K");
+
+            // Empty label
+            state.settings.target.label = "";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            targetText = svgRoot.querySelector(`text.${SVGConstants.classes.targetText}`);
+            expect(targetText?.textContent).toBe("1K");
+        });
+
+        it("applies target visual settings: fontFamily, fontSize, color", () => {
+            const state = createDummyState();
+            state.settings.target.fontFamily = "Comic Sans MS";
+            state.settings.target.fontSize = 20;
+            state.settings.target.color = "#FF00FF";
+            
+            const layout = createDummyLayout();
+            layout.target!.fontSize = 20; // The renderer relies on the layout for dimensions
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const targetText = svgRoot.querySelector(`text.${SVGConstants.classes.targetText}`) as SVGTextElement;
+            expect(targetText.style.fontFamily).toContain("Comic Sans MS");
+            expect(targetText.style.fontSize).toBe("20px");
+            expect(targetText.style.fill).toMatch(/rgb\(255, 0, 255\)|#FF00FF/i);
+        });
+    });
+
+    describe("Progress Group", () => {
+        it("uses backgroundColor, customColor vs useStatusColor", () => {
+            const state = createDummyState();
+            
+            // custom color
+            state.settings.progress.useStatusColor = false;
+            state.settings.progress.customColor = "#0000FF";
+            state.settings.progress.backgroundColor = "#CCCCCC";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            let track = svgRoot.querySelector(`rect.${SVGConstants.classes.progressTrack}`) as SVGRectElement;
+            let fill = svgRoot.querySelector(`rect.${SVGConstants.classes.progressFill}`) as SVGRectElement;
+            
+            expect(track.style.fill).toMatch(/rgb\(204, 204, 204\)|#CCCCCC/i);
+            expect(fill.style.fill).toMatch(/rgb\(0, 0, 255\)|#0000FF/i);
+
+            // use status color
+            state.settings.progress.useStatusColor = true;
+            state.calculatedStatusColor = "#FF0000";
+            KpiRenderer.render(svgRoot, createDummyLayout(), state);
+            
+            fill = svgRoot.querySelector(`rect.${SVGConstants.classes.progressFill}`) as SVGRectElement;
+            expect(fill.style.fill).toMatch(/rgb\(255, 0, 0\)|#FF0000/i);
+        });
+
+        it("maps height and effectiveRadius to SVG correctly", () => {
+            const state = createDummyState();
+            const layout = createDummyLayout();
+            layout.progress!.track.height = 16;
+            state.settings.progress.effectiveRadius = 8;
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const track = svgRoot.querySelector(`rect.${SVGConstants.classes.progressTrack}`) as SVGRectElement;
+            expect(track.getAttribute("height")).toBe("16");
+            expect(track.getAttribute("rx")).toBe("8");
+        });
+
+        it("hides achievementText when showPercentage is false", () => {
+            const state = createDummyState();
+            state.settings.progress.showPercentage = false;
+            
+            const layout = createDummyLayout();
+            layout.progress!.achievementText = undefined; // Handled by layout
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const achievementText = svgRoot.querySelector(`text.${SVGConstants.classes.achievementText}`);
+            expect(achievementText).toBeNull();
+        });
+
+        it("applies percentageSize and percentageColor", () => {
+            const state = createDummyState();
+            state.settings.progress.showPercentage = true;
+            state.settings.progress.percentageSize = 18;
+            state.settings.progress.percentageColor = "#123456";
+            
+            const layout = createDummyLayout();
+            layout.progress!.achievementText!.fontSize = 18;
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const achievementText = svgRoot.querySelector(`text.${SVGConstants.classes.achievementText}`) as SVGTextElement;
+            expect(achievementText.style.fontSize).toBe("18px");
+            expect(achievementText.style.fill).toMatch(/rgb\(18, 52, 86\)|#123456/i);
+        });
+
+        it("hides overachievement mark when showOverachievementMark is false", () => {
+            const state = createDummyState();
+            state.settings.progress.showOverachievementMark = false;
+            
+            const layout = createDummyLayout();
+            layout.progress!.overperformanceMarker = undefined; // Handled by layout
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const mark = svgRoot.querySelector(`rect.${SVGConstants.classes.overperformanceMarker}`);
+            expect(mark).toBeNull();
+        });
+
+        it("applies markColor and markThickness", () => {
+            const state = createDummyState();
+            state.settings.progress.showOverachievementMark = true;
+            state.settings.progress.markColor = "#654321";
+            state.settings.progress.markThickness = 5;
+            
+            const layout = createDummyLayout();
+            layout.progress!.overperformanceMarker!.width = 5;
+            
+            KpiRenderer.render(svgRoot, layout, state);
+            
+            const mark = svgRoot.querySelector(`rect.${SVGConstants.classes.overperformanceMarker}`) as SVGRectElement;
+            expect(mark.style.fill).toMatch(/rgb\(101, 67, 33\)|#654321/i);
+            expect(mark.getAttribute("width")).toBe("5");
+        });
+
+        it("shows mark when achievement > 1 and hides when achievement <= 1", () => {
+            const state = createDummyState();
+            const layout = createDummyLayout();
+            
+            // > 1
+            layout.progress!.isOverperforming = true;
+            KpiRenderer.render(svgRoot, layout, state);
+            expect(svgRoot.querySelector(`rect.${SVGConstants.classes.overperformanceMarker}`)).not.toBeNull();
+
+            // <= 1
+            layout.progress!.isOverperforming = false;
+            KpiRenderer.render(svgRoot, layout, state);
+            expect(svgRoot.querySelector(`rect.${SVGConstants.classes.overperformanceMarker}`)).toBeNull();
+        });
+
+        it("avoids duplicate SVG elements on multiple updates", () => {
+            KpiRenderer.render(svgRoot, createDummyLayout(), createDummyState());
+            KpiRenderer.render(svgRoot, createDummyLayout(), createDummyState());
+            
+            const tracks = svgRoot.querySelectorAll(`rect.${SVGConstants.classes.progressTrack}`);
+            const fills = svgRoot.querySelectorAll(`rect.${SVGConstants.classes.progressFill}`);
+            const marks = svgRoot.querySelectorAll(`rect.${SVGConstants.classes.overperformanceMarker}`);
+            const texts = svgRoot.querySelectorAll(`text.${SVGConstants.classes.achievementText}`);
+            
+            expect(tracks.length).toBe(1);
+            expect(fills.length).toBe(1);
+            expect(marks.length).toBe(1);
+            expect(texts.length).toBe(1);
+        });
     });
 });
