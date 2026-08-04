@@ -1,0 +1,26 @@
+{
+  "visual": {
+    "name": "executiveKpiCard",
+    "displayName": "Executive KPI Card",
+    "guid": "executiveKpiCard277B9F382F984CFAA03FC9CA3D216616",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "Tarjeta KPI ejecutiva reutilizable con valor, comparación, meta, barra de cumplimiento y estado configurable.",
+    "supportUrl": "https://example.com/pending",
+    "gitHubUrl": "https://example.com/pending"
+  },
+  "apiVersion": "5.11.1",
+  "author": {
+    "name": "Roberto Castro",
+    "email": "pending@example.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": null,
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": null,
+  "stringResources": [],
+  "version": "1.0.0.0"
+}

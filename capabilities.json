@@ -1,0 +1,277 @@
+{
+  "dataRoles": [
+    {
+      "displayName": "Título",
+      "name": "title",
+      "kind": "GroupingOrMeasure",
+      "description": "Título principal del indicador",
+      "requiredTypes": [{ "text": true }]
+    },
+    {
+      "displayName": "Valor actual",
+      "name": "actualValue",
+      "kind": "Measure",
+      "description": "Resultado principal del KPI",
+      "requiredTypes": [{ "numeric": true }, { "integer": true }]
+    },
+    {
+      "displayName": "Valor anterior",
+      "name": "previousValue",
+      "kind": "Measure",
+      "description": "Valor del período anterior (calcula variación si no se da)",
+      "requiredTypes": [{ "numeric": true }, { "integer": true }]
+    },
+    {
+      "displayName": "Variación %",
+      "name": "variation",
+      "kind": "Measure",
+      "description": "Variación decimal frente al período anterior",
+      "requiredTypes": [{ "numeric": true }, { "integer": true }]
+    },
+    {
+      "displayName": "Meta",
+      "name": "target",
+      "kind": "Measure",
+      "description": "Meta u objetivo del período",
+      "requiredTypes": [{ "numeric": true }, { "integer": true }]
+    },
+    {
+      "displayName": "Cumplimiento %",
+      "name": "achievement",
+      "kind": "Measure",
+      "description": "Cumplimiento decimal (ej: 0.9 = 90%)",
+      "requiredTypes": [{ "numeric": true }, { "integer": true }]
+    },
+    {
+      "displayName": "Estado",
+      "name": "status",
+      "kind": "GroupingOrMeasure",
+      "description": "Texto de estado",
+      "requiredTypes": [{ "text": true }]
+    },
+    {
+      "displayName": "Período comparado",
+      "name": "comparisonPeriod",
+      "kind": "GroupingOrMeasure",
+      "description": "Texto descriptivo del período",
+      "requiredTypes": [{ "text": true }]
+    },
+    {
+      "displayName": "Color del estado",
+      "name": "statusColor",
+      "kind": "GroupingOrMeasure",
+      "description": "Color hexadecimal (ej: #16A34A)",
+      "requiredTypes": [{ "text": true }]
+    },
+    {
+      "displayName": "Color de variación",
+      "name": "variationColor",
+      "kind": "GroupingOrMeasure",
+      "description": "Color hexadecimal para la variación",
+      "requiredTypes": [{ "text": true }]
+    },
+    {
+      "displayName": "Indicador de tendencia",
+      "name": "trendIcon",
+      "kind": "GroupingOrMeasure",
+      "description": "Símbolo opcional (▲, ▼, ■)",
+      "requiredTypes": [{ "text": true }]
+    }
+  ],
+  "objects": {
+    "general": {
+      "displayName": "General",
+      "properties": {
+        "backgroundColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "transparency": { "type": { "numeric": true } },
+        "borderOn": { "type": { "bool": true } },
+        "borderColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "borderThickness": { "type": { "numeric": true } },
+        "cornerRadius": { "type": { "numeric": true } },
+        "padding": { "type": { "numeric": true } },
+        "topLineOn": { "type": { "bool": true } },
+        "topLineThickness": { "type": { "numeric": true } },
+        "topLineColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "shadowOn": { "type": { "bool": true } },
+        "shadowIntensity": { "type": { "numeric": true } },
+        "shadowColor": { "type": { "fill": { "solid": { "color": true } } } }
+      }
+    },
+    "title": {
+      "displayName": "Título",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "altText": { "type": { "text": true } },
+        "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "bold": { "type": { "bool": true } },
+        "color": { "type": { "fill": { "solid": { "color": true } } } },
+        "alignment": { "type": { "formatting": { "alignment": true } } },
+        "maxLines": { "type": { "numeric": true } },
+        "wordWrap": { "type": { "bool": true } },
+        "bottomMargin": { "type": { "numeric": true } }
+      }
+    },
+    "actualValue": {
+      "displayName": "Valor principal",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "bold": { "type": { "bool": true } },
+        "color": { "type": { "fill": { "solid": { "color": true } } } },
+        "alignment": { "type": { "formatting": { "alignment": true } } },
+        "displayUnits": { "type": { "formatting": { "labelDisplayUnits": true } } },
+        "decimalPlaces": { "type": { "numeric": true } },
+        "prefix": { "type": { "text": true } },
+        "suffix": { "type": { "text": true } },
+        "thousandsSeparator": { "type": { "bool": true } },
+        "showDashIfNull": { "type": { "bool": true } }
+      }
+    },
+    "comparison": {
+      "displayName": "Comparación",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "showPeriod": { "type": { "bool": true } },
+        "defaultPeriodText": { "type": { "text": true } },
+        "showVariation": { "type": { "bool": true } },
+        "showArrow": { "type": { "bool": true } },
+        "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "positiveColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "negativeColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "neutralColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "invertLogic": { "type": { "bool": true } },
+        "percentageDecimals": { "type": { "numeric": true } },
+        "noComparisonText": { "type": { "text": true } }
+      }
+    },
+    "target": {
+      "displayName": "Meta",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "label": { "type": { "text": true } },
+        "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "color": { "type": { "fill": { "solid": { "color": true } } } },
+        "displayUnits": { "type": { "formatting": { "labelDisplayUnits": true } } },
+        "decimalPlaces": { "type": { "numeric": true } },
+        "prefix": { "type": { "text": true } },
+        "suffix": { "type": { "text": true } }
+      }
+    },
+    "progress": {
+      "displayName": "Barra de progreso",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "height": { "type": { "numeric": true } },
+        "radius": { "type": { "numeric": true } },
+        "backgroundColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "useStatusColor": { "type": { "bool": true } },
+        "customColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "showPercentage": { "type": { "bool": true } },
+        "percentageSize": { "type": { "formatting": { "fontSize": true } } },
+        "percentageColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "decimalPlaces": { "type": { "numeric": true } },
+        "capAt100": { "type": { "bool": true } },
+        "showOverachievementMark": { "type": { "bool": true } },
+        "markColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "markThickness": { "type": { "numeric": true } }
+      }
+    },
+    "status": {
+      "displayName": "Estado",
+      "properties": {
+        "show": { "type": { "bool": true } },
+        "statusSource": {
+          "type": {
+            "enumeration": [
+              { "value": "auto", "displayName": "Automático" },
+              { "value": "data", "displayName": "Desde datos" },
+              { "value": "custom", "displayName": "Personalizado" }
+            ]
+          }
+        },
+        "showCircle": { "type": { "bool": true } },
+        "circleSize": { "type": { "numeric": true } },
+        "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "color": { "type": { "fill": { "solid": { "color": true } } } },
+        "successThreshold": { "type": { "numeric": true } },
+        "warningThreshold": { "type": { "numeric": true } },
+        "successText": { "type": { "text": true } },
+        "warningText": { "type": { "text": true } },
+        "dangerText": { "type": { "text": true } },
+        "noDataText": { "type": { "text": true } },
+        "successColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "warningColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "dangerColor": { "type": { "fill": { "solid": { "color": true } } } },
+        "neutralColor": { "type": { "fill": { "solid": { "color": true } } } }
+      }
+    },
+    "responsive": {
+      "displayName": "Diseño responsive",
+      "properties": {
+        "autoScale": { "type": { "bool": true } },
+        "minWidth": { "type": { "numeric": true } },
+        "minHeight": { "type": { "numeric": true } },
+        "hideSecondary": { "type": { "bool": true } },
+        "compactMode": { "type": { "bool": true } },
+        "referenceSize": { "type": { "numeric": true } }
+      }
+    },
+    "accessibility": {
+      "displayName": "Accesibilidad",
+      "properties": {
+        "customAltText": { "type": { "text": true } },
+        "includeValue": { "type": { "bool": true } },
+        "includeTarget": { "type": { "bool": true } },
+        "includeVariation": { "type": { "bool": true } },
+        "includeStatus": { "type": { "bool": true } },
+        "focusIndicator": { "type": { "bool": true } },
+        "focusColor": { "type": { "fill": { "solid": { "color": true } } } }
+      }
+    }
+  },
+  "dataViewMappings": [
+    {
+      "conditions": [
+        {
+          "title": { "max": 1 },
+          "actualValue": { "min": 1, "max": 1 },
+          "previousValue": { "max": 1 },
+          "variation": { "max": 1 },
+          "target": { "max": 1 },
+          "achievement": { "max": 1 },
+          "status": { "max": 1 },
+          "comparisonPeriod": { "max": 1 },
+          "statusColor": { "max": 1 },
+          "variationColor": { "max": 1 },
+          "trendIcon": { "max": 1 }
+        }
+      ],
+      "table": {
+        "rows": {
+          "select": [
+            { "for": { "in": "title" } },
+            { "for": { "in": "actualValue" } },
+            { "for": { "in": "previousValue" } },
+            { "for": { "in": "variation" } },
+            { "for": { "in": "target" } },
+            { "for": { "in": "achievement" } },
+            { "for": { "in": "status" } },
+            { "for": { "in": "comparisonPeriod" } },
+            { "for": { "in": "statusColor" } },
+            { "for": { "in": "variationColor" } },
+            { "for": { "in": "trendIcon" } }
+          ]
+        }
+      }
+    }
+  ],
+  "supportsLandingPage": true,
+  "supportsEmptyDataView": true,
+  "supportsKeyboardFocus": true,
+  "privileges": []
+}
