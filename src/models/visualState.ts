@@ -1,13 +1,28 @@
-import { KpiData } from "./kpiData";
-import { LayoutMode, StatusType } from "./enums";
-
 export interface VisualState {
-    data: KpiData | null;
-    layoutMode: LayoutMode;
-    viewport: { width: number; height: number };
-    calculatedStatus: StatusType;
-    calculatedStatusText: string;
-    calculatedStatusColor: string;
-    calculatedVariation: number | null;
-    calculatedAchievement: number | null;
+    hasData: boolean;
+    title?: {
+        text: string;
+    };
+    actual: {
+        formattedValue: string;
+    };
+    comparison?: {
+        period: string | null;
+        formattedVariation: string;
+        trend: "up" | "down" | "neutral" | "unavailable";
+        trendIcon: string | null;
+        isFavorable: boolean;
+        color: string | null;
+    };
+    target?: {
+        formattedValue: string;
+    };
+    achievement?: {
+        formattedValue: string;
+        progressRatio: number;
+    };
+    status?: {
+        text: string;
+        color: string;
+    };
 }
