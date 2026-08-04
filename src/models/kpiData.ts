@@ -1,4 +1,5 @@
 export interface KpiData {
+    hasActualValueRole: boolean;
     title?: string;
     actualValue: number | null;
     previousValue?: number | null;

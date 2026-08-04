@@ -6,27 +6,27 @@ import { TextUtils } from "../utils/textUtils";
 
 export class LayoutCalculator {
     public calculate(viewport: Size, state: VisualState): KpiLayout {
-        // 1. Determinar el modo de layout
         const mode = this.determineMode(viewport);
+        
+        const generalCard = state.settings.general;
+        const titleCard = state.settings.title;
+        const actualValueCard = state.settings.actualValue;
 
-        // 2. Extraer propiedades básicas dependientes del modo
-        const padding = this.getPadding(mode);
+        const padding = generalCard.padding;
         const fontSizes = SVGConstants.fontSizes[mode.toUpperCase() as keyof typeof SVGConstants.fontSizes];
         const innerWidth = Math.max(0, viewport.width - padding * 2);
-        const innerHeight = Math.max(0, viewport.height - padding * 2);
 
-        // 3. Determinar visibilidad de elementos basados en datos y modo
-        const showTitle = !!state.title;
+        const showTitle = titleCard.show && !!state.title;
+        const showActualValue = actualValueCard.show;
         const showComparison = !!state.comparison && !!state.comparison.period;
         const showTarget = !!state.target && mode !== LayoutMode.MINIMUM;
         const showProgress = !!state.achievement && mode !== LayoutMode.MINIMUM;
         const showStatus = !!state.status;
 
-        // Start calculating Y positions from top to bottom
         let currentY = padding;
 
         // Accent line (siempre en la parte superior, ocupa todo el ancho)
-        const accentHeight = VisualDefaults.Layout.AccentLineHeight;
+        const accentHeight = generalCard.topLineThickness;
         const accent = {
             x: 0,
             y: 0,
@@ -34,30 +34,48 @@ export class LayoutCalculator {
             height: accentHeight
         };
 
+        // Alignment Helper
+        const getAlignment = (align: string, defaultAlign: "start" | "middle" | "end" = "middle") => {
+            if (align === "left") return { x: padding, textAnchor: "start" as const };
+            if (align === "right") return { x: viewport.width - padding, textAnchor: "end" as const };
+            if (align === "center") return { x: viewport.width / 2, textAnchor: "middle" as const };
+            return { x: viewport.width / 2, textAnchor: defaultAlign };
+        };
+
         // Title
         let titleLayout = undefined;
         if (showTitle) {
-            currentY += fontSizes.title; // Base line spacing
+            const fontSize = titleCard.fontSize;
+            const align = titleCard.alignment;
+            const alignProps = getAlignment(align);
+            currentY += fontSize; 
             titleLayout = {
-                x: viewport.width / 2, // Centrado
+                x: alignProps.x,
                 y: currentY,
                 width: innerWidth,
-                fontSize: fontSizes.title,
-                textAnchor: "middle" as const
+                fontSize: fontSize,
+                textAnchor: alignProps.textAnchor
             };
-            currentY += mode === LayoutMode.COMPACT ? 8 : 12; // Spacing below title
+            const bottomMargin = titleCard.bottomMargin;
+            currentY += bottomMargin; 
         }
 
         // Value
-        currentY += fontSizes.value;
-        const valueLayout = {
-            x: viewport.width / 2,
-            y: currentY,
-            width: innerWidth,
-            fontSize: fontSizes.value,
-            textAnchor: "middle" as const
-        };
-        currentY += mode === LayoutMode.COMPACT ? 10 : 16;
+        let valueLayout = undefined;
+        if (showActualValue) {
+            const fontSize = actualValueCard.fontSize;
+            const align = actualValueCard.alignment;
+            const alignProps = getAlignment(align);
+            currentY += fontSize;
+            valueLayout = {
+                x: alignProps.x,
+                y: currentY,
+                width: innerWidth,
+                fontSize: fontSize,
+                textAnchor: alignProps.textAnchor
+            };
+            currentY += mode === LayoutMode.COMPACT ? 10 : 16;
+        }
 
         // Comparison Row (Periodo y Variación)
         let comparisonPeriodLayout = undefined;

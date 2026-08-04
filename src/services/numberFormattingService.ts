@@ -1,17 +1,62 @@
 import { valueFormatter } from "powerbi-visuals-utils-formattingutils";
+import { isFiniteNumber } from "../utils/validationUtils";
+
+export interface FormatOptions {
+    formatString?: string;
+    useModelFormat?: boolean;
+    displayUnits?: number;
+    decimalPlaces?: number;
+    prefix?: string;
+    suffix?: string;
+    thousandsSeparator?: boolean;
+    showDashIfNull?: boolean;
+}
 
 export class NumberFormattingService {
-    public format(value: number | null, formatString?: string, displayUnit?: number): string {
-        if (value === null || value === undefined) {
-            return "-";
+    public format(value: number | null, options: FormatOptions = {}): string {
+        if (!isFiniteNumber(value)) {
+            return options.showDashIfNull !== false ? "—" : "";
         }
         
-        const formatter = valueFormatter.create({
-            format: formatString || "0",
-            value: displayUnit !== undefined ? displayUnit : undefined,
+        const useModelFormat = options.useModelFormat !== false;
+        
+        let formatterOptions: any = {
+            format: options.formatString || "0",
             allowFormatBeautification: true
-        });
+        };
 
-        return formatter.format(value);
+        if (!useModelFormat) {
+            // Apply manual format options
+            formatterOptions.value = options.displayUnits !== undefined && options.displayUnits !== 0 ? options.displayUnits : undefined;
+            if (options.decimalPlaces !== undefined && options.decimalPlaces !== null) {
+                formatterOptions.precision = options.decimalPlaces;
+            }
+            // For thousands separator, powerbi-visuals-utils-formattingutils relies on format string mostly, 
+            // but we can manipulate the string format or use it dynamically if needed.
+            // Since we override model format, we might need a generic format string.
+            // "0" or "0.00" vs "#,0" or "#,0.00"
+            let genericFormat = options.thousandsSeparator ? "#,0" : "0";
+            if (options.decimalPlaces && options.decimalPlaces > 0) {
+                // Formattingutils uses precision, but providing a base string helps.
+            }
+            formatterOptions.format = genericFormat;
+        } else {
+            // Original format string behavior with optional value override
+            formatterOptions.value = options.displayUnits !== undefined && options.displayUnits !== 0 ? options.displayUnits : undefined;
+        }
+        
+        const formatter = valueFormatter.create(formatterOptions);
+        let formattedText = formatter.format(value);
+
+        if (!useModelFormat) {
+            if (options.prefix) {
+                formattedText = options.prefix + formattedText;
+            }
+            if (options.suffix) {
+                formattedText = formattedText + options.suffix;
+            }
+        }
+
+        return formattedText;
     }
 }

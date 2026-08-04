@@ -90,6 +90,7 @@
         "cornerRadius": { "type": { "numeric": true } },
         "padding": { "type": { "numeric": true } },
         "topLineOn": { "type": { "bool": true } },
+        "topLineUseStatusColor": { "type": { "bool": true } },
         "topLineThickness": { "type": { "numeric": true } },
         "topLineColor": { "type": { "fill": { "solid": { "color": true } } } },
         "shadowOn": { "type": { "bool": true } },
@@ -116,6 +117,7 @@
       "displayName": "Valor principal",
       "properties": {
         "show": { "type": { "bool": true } },
+        "useModelFormat": { "type": { "bool": true } },
         "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
         "fontSize": { "type": { "formatting": { "fontSize": true } } },
         "bold": { "type": { "bool": true } },
@@ -151,6 +153,7 @@
       "displayName": "Meta",
       "properties": {
         "show": { "type": { "bool": true } },
+        "inheritValueFormat": { "type": { "bool": true } },
         "label": { "type": { "text": true } },
         "fontFamily": { "type": { "formatting": { "fontFamily": true } } },
         "fontSize": { "type": { "formatting": { "fontSize": true } } },

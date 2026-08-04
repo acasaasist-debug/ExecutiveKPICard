@@ -45,7 +45,7 @@ export interface KpiLayout {
     // Layout elements
     accent: RectLayout;
     title?: TextLayout;
-    value: TextLayout;
+    value?: TextLayout;
     
     comparisonPeriod?: TextLayout;
     variation?: TextLayout;

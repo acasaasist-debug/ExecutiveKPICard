@@ -4,7 +4,7 @@
     "displayName": "Executive KPI Card",
     "guid": "executiveKpiCard277B9F382F984CFAA03FC9CA3D216616",
     "visualClassName": "Visual",
-    "version": "1.0.0.0",
+    "version": "1.0.0.2",
     "description": "Tarjeta KPI ejecutiva reutilizable con valor, comparación, meta, barra de cumplimiento y estado configurable.",
     "supportUrl": "https://example.com/pending",
     "gitHubUrl": "https://example.com/pending"
@@ -22,5 +22,5 @@
   "capabilities": "capabilities.json",
   "dependencies": null,
   "stringResources": [],
-  "version": "1.0.0.0"
+  "version": "1.0.0.2"
 }

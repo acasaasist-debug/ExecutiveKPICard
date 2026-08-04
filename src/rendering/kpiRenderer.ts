@@ -40,31 +40,51 @@ export class KpiRenderer {
     private static renderBackground(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const bgGroup = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.backgroundGroup);
         SvgFactory.clearGroup(bgGroup);
+        
+        const generalCard = state.settings.general;
+        const cornerRadius = generalCard.cornerRadius;
+        const backgroundColor = generalCard.backgroundColor;
+        const transparency = generalCard.transparency;
+        const opacity = Math.max(0, Math.min(1, 1 - transparency / 100));
+        
+        const borderOn = generalCard.borderOn;
+        const borderColor = generalCard.borderColor;
+        const borderThickness = generalCard.borderThickness;
 
         const rect = SvgFactory.createRect(SVGConstants.classes.backgroundRect);
         rect.setAttribute("x", "0");
         rect.setAttribute("y", "0");
         rect.setAttribute("width", layout.viewport.width.toString());
         rect.setAttribute("height", layout.viewport.height.toString());
-        rect.setAttribute("rx", VisualDefaults.Layout.CornerRadius.toString());
-        rect.setAttribute("ry", VisualDefaults.Layout.CornerRadius.toString());
+        rect.setAttribute("rx", cornerRadius.toString());
+        rect.setAttribute("ry", cornerRadius.toString());
+        
+        rect.style.fill = backgroundColor;
+        rect.style.fillOpacity = opacity.toString();
+        
+        if (borderOn) {
+            rect.style.stroke = borderColor;
+            rect.style.strokeWidth = borderThickness.toString();
+        } else {
+            rect.style.stroke = "none";
+        }
+        
         bgGroup.appendChild(rect);
 
         // Accent line at the top
         const accentGroup = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.accentGroup);
         SvgFactory.clearGroup(accentGroup);
         
-        if (state.status && state.status.color) {
-            // We draw a path to round only the top corners
+        const topLineOn = generalCard.topLineOn;
+        
+        if (topLineOn) {
+            const topLineUseStatusColor = generalCard.topLineUseStatusColor;
+            const customTopLineColor = generalCard.topLineColor;
+            const lineColor = topLineUseStatusColor && state.status ? state.status.color : customTopLineColor;
+            
             const w = layout.viewport.width;
             const h = layout.accent.height;
-            const r = VisualDefaults.Layout.CornerRadius;
-            
-            // Si el radio es mayor que la mitad del ancho, se ajusta, pero asumimos valores normales.
-            // d="M 0,r a r,r 0 0,1 r,-r h w-2r a r,r 0 0,1 r,r v h-r h -w z"
-            // Wait, an easier way is just drawing a rect with a clip-path, but we can't easily rely on clip-paths in old environments.
-            // Using a simple rect with rounded corners and overlapping it works if the background has rounded corners too.
-            // Let's just use a path.
+            const r = cornerRadius;
             
             const pathData = `M 0,${r} ` + 
                              `A ${r},${r} 0 0,1 ${r},0 ` + 
@@ -75,7 +95,7 @@ export class KpiRenderer {
                              
             const accentPath = SvgFactory.createPath(SVGConstants.classes.accentLine);
             accentPath.setAttribute("d", pathData);
-            accentPath.style.fill = state.status.color;
+            accentPath.style.fill = lineColor;
             accentGroup.appendChild(accentPath);
         }
     }
@@ -86,19 +106,25 @@ export class KpiRenderer {
 
         if (!layout.showTitle || !layout.title || !state.title) return;
 
+        const titleCard = state.settings.title;
+        const fontFamily = titleCard.fontFamily;
+        const fontWeight = titleCard.bold ? SVGConstants.fontWeights.bold : SVGConstants.fontWeights.normal;
+        const fontColor = titleCard.color;
+
         const text = SvgFactory.createText(SVGConstants.classes.titleText);
         text.setAttribute("x", layout.title.x.toString());
         text.setAttribute("y", layout.title.y.toString());
         text.setAttribute("text-anchor", layout.title.textAnchor || "start");
         
-        const fontFamily = SVGConstants.fontFamilies.primary;
         const fontSize = layout.title.fontSize || 14;
         
-        const truncated = TextUtils.truncateText(state.title.text, layout.title.width || layout.viewport.width, fontSize, fontFamily, SVGConstants.fontWeights.semibold);
+        const truncated = TextUtils.truncateText(state.title.text, layout.title.width || layout.viewport.width, fontSize, fontFamily, fontWeight);
         text.textContent = truncated;
         
-        // We will set font-size via CSS or attributes. We'll use CSS mostly, but inline font-size is safer if layout mode changes it dynamically
         text.style.fontSize = `${fontSize}px`;
+        text.style.fontFamily = fontFamily;
+        text.style.fontWeight = fontWeight.toString();
+        text.style.fill = fontColor;
         
         group.appendChild(text);
     }
@@ -107,20 +133,29 @@ export class KpiRenderer {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.valueGroup);
         SvgFactory.clearGroup(group);
 
+        if (!layout.value || !state.actual.formattedValue) return;
+
+        const actualValueCard = state.settings.actualValue;
+        const fontFamily = actualValueCard.fontFamily;
+        const fontWeight = actualValueCard.bold ? SVGConstants.fontWeights.bold : SVGConstants.fontWeights.normal;
+        const fontColor = actualValueCard.color;
+
         const text = SvgFactory.createText(SVGConstants.classes.valueText);
         text.setAttribute("x", layout.value.x.toString());
         text.setAttribute("y", layout.value.y.toString());
         text.setAttribute("text-anchor", layout.value.textAnchor || "start");
         
-        const fontFamily = SVGConstants.fontFamilies.primary;
         let fontSize = layout.value.fontSize || 32;
         const valueStr = state.actual.formattedValue;
 
         // Auto-scale font size if needed
         const maxWidth = layout.value.width || layout.viewport.width;
-        fontSize = TextUtils.fitFontSize(valueStr, maxWidth, fontSize, 12, fontFamily, SVGConstants.fontWeights.bold);
+        fontSize = TextUtils.fitFontSize(valueStr, maxWidth, fontSize, 12, fontFamily, fontWeight);
 
         text.style.fontSize = `${fontSize}px`;
+        text.style.fontFamily = fontFamily;
+        text.style.fontWeight = fontWeight.toString();
+        text.style.fill = fontColor;
         text.textContent = valueStr;
         
         group.appendChild(text);

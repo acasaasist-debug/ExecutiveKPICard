@@ -27,9 +27,51 @@ describe("KpiRenderer", () => {
         jest.clearAllMocks();
     });
 
+    const createDummySettings = (): any => ({
+        general: {
+            backgroundColor: "#FFFFFF",
+            transparency: 0,
+            borderOn: true,
+            borderColor: "#000000",
+            borderThickness: 1,
+            cornerRadius: 12,
+            padding: 16,
+            topLineOn: true,
+            topLineUseStatusColor: true,
+            topLineThickness: 3,
+            topLineColor: "#000000"
+        },
+        title: {
+            show: true,
+            fontFamily: "Arial",
+            fontSize: 14,
+            bold: true,
+            color: "#000000",
+            alignment: "center",
+            bottomMargin: 4
+        },
+        actualValue: {
+            show: true,
+            useModelFormat: true,
+            fontFamily: "Arial",
+            fontSize: 32,
+            bold: true,
+            color: "#000000",
+            alignment: "center",
+            displayUnits: 0,
+            decimalPlaces: 0,
+            prefix: "",
+            suffix: "",
+            thousandsSeparator: true,
+            showDashIfNull: true
+        }
+    });
+
     const createDummyState = (): VisualState => ({
         hasData: true,
-        title: { text: "My Title" },
+        hasActualValueRole: true,
+        settings: createDummySettings(),
+        title: { text: "Test KPI" },
         actual: { formattedValue: "1,234" },
         comparison: {
             period: "vs last month",

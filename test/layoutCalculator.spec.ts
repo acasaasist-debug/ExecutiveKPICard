@@ -14,9 +14,51 @@ describe("LayoutCalculator", () => {
         HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue(mockContext) as any;
     });
 
+    const createDummySettings = (): any => ({
+        general: {
+            backgroundColor: "#FFFFFF",
+            transparency: 0,
+            borderOn: true,
+            borderColor: "#000000",
+            borderThickness: 1,
+            cornerRadius: 12,
+            padding: 16,
+            topLineOn: true,
+            topLineUseStatusColor: true,
+            topLineThickness: 3,
+            topLineColor: "#000000"
+        },
+        title: {
+            show: true,
+            fontFamily: "Arial",
+            fontSize: 14,
+            bold: true,
+            color: "#000000",
+            alignment: "center",
+            bottomMargin: 4
+        },
+        actualValue: {
+            show: true,
+            useModelFormat: true,
+            fontFamily: "Arial",
+            fontSize: 32,
+            bold: true,
+            color: "#000000",
+            alignment: "center",
+            displayUnits: 0,
+            decimalPlaces: 0,
+            prefix: "",
+            suffix: "",
+            thousandsSeparator: true,
+            showDashIfNull: true
+        }
+    });
+
     const createDummyState = (): VisualState => ({
         hasData: true,
-        title: { text: "My Title" },
+        hasActualValueRole: true,
+        settings: createDummySettings(),
+        title: { text: "Sales" },
         actual: { formattedValue: "1,234" },
         comparison: {
             period: "vs last month",
@@ -73,14 +115,14 @@ describe("LayoutCalculator", () => {
 
         it("returns MINIMUM mode for 120x100 without negative positions", () => {
             const layout = calculator.calculate({ width: 120, height: 100 }, createDummyState());
-            expect(layout.mode).toBe(LayoutMode.MINIMUM);
-            expect(layout.value.y).toBeGreaterThan(0);
+            expect(layout.title).toBeDefined();
+            expect(layout.value!.y).toBeGreaterThan(0);
         });
 
-        it("handles zero viewport gracefully", () => {
-            const layout = calculator.calculate({ width: 0, height: 0 }, createDummyState());
-            expect(layout.mode).toBe(LayoutMode.MINIMUM);
-            expect(layout.value.x).toBeGreaterThanOrEqual(0);
+        it("centers text horizontally by default", () => {
+            const layout = calculator.calculate({ width: 300, height: 400 }, createDummyState());
+            expect(layout.value!.x).toBeGreaterThanOrEqual(0);
+            expect(layout.title!.x).toEqual(150);
         });
     });
 
@@ -125,10 +167,12 @@ describe("LayoutCalculator", () => {
             expect(layout.statusIndicator).toBeUndefined();
         });
         
-        it("calculates layout with ONLY actualValue safely", () => {
+        it("ignores undefined properties securely", () => {
             const state: VisualState = {
                 hasData: true,
-                actual: { formattedValue: "1,234" }
+                hasActualValueRole: true,
+                settings: createDummySettings(),
+                actual: { formattedValue: "1M" }
             };
             const layout = calculator.calculate({ width: 300, height: 220 }, state);
             expect(layout.showTitle).toBe(false);

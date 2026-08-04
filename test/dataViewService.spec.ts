@@ -1,4 +1,5 @@
 import { DataViewService } from "../src/services/dataViewService";
+import { DataViewReadStatus } from "../src/models/dataViewStatus";
 import powerbi from "powerbi-visuals-api";
 
 describe("DataViewService", () => {
@@ -23,30 +24,63 @@ describe("DataViewService", () => {
                 rows: [[100, "Title"]]
             }
         };
-        const result = service.parse(dv);
-        expect(result.actualValue).toBe(100);
-        expect(result.title).toBe("Title");
+        const { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.StableValue);
+        expect(data.actualValue).toBe(100);
+        expect(data.title).toBe("Title");
     });
 
-    // 4. Tabla presente pero sin filas.
-    it("handles table present but without rows", () => {
+    // 4. Tabla presente pero sin filas → TransientIncomplete (no NoActualValueRole)
+    it("returns TransientIncomplete when actualValue role exists but rows are empty", () => {
         const dv: any = {
             metadata: { columns: [{ roles: { actualValue: true } }] },
             table: { rows: [] }
         };
-        const result = service.parse(dv);
-        expect(result.actualValue).toBeNull();
+        const { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.TransientIncomplete);
+        // hasActualValueRole must be true – role IS bound
+        expect(data.hasActualValueRole).toBe(true);
+        // actualValue is null because there is no row yet
+        expect(data.actualValue).toBeNull();
     });
 
-    // 5. Rechaza NaN.
+    // 5. Rechaza NaN y null como values pero preserva hasActualValueRole
     // 6. Rechaza Infinity.
-    it("rejects NaN and Infinity", () => {
+    it("rejects NaN and Infinity but keeps hasActualValueRole true if role exists", () => {
         const dv: any = {
             metadata: { columns: [{ roles: { actualValue: true } }] },
-            table: { rows: [[NaN], [Infinity], [-Infinity]] }
+            table: { rows: [[NaN]] }
         };
-        const result = service.parse(dv);
-        expect(result.actualValue).toBeNull();
+        let { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.StableBlank);
+        expect(data.hasActualValueRole).toBe(true);
+        expect(data.actualValue).toBeNull();
+
+        dv.table.rows = [[Infinity]];
+        ({ status, data } = service.parse(dv));
+        expect(status).toBe(DataViewReadStatus.StableBlank);
+        expect(data.actualValue).toBeNull();
+    });
+
+    it("identifies when there is no actualValue role", () => {
+        const dv: any = {
+            metadata: { columns: [{ roles: { title: true } }] },
+            table: { rows: [["Title Only"]] }
+        };
+        const { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.NoActualValueRole);
+        expect(data.hasActualValueRole).toBe(false);
+    });
+
+    it("identifies when there is an actualValue role but value is null (BLANK)", () => {
+        const dv: any = {
+            metadata: { columns: [{ roles: { actualValue: true } }] },
+            table: { rows: [[null]] }
+        };
+        const { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.StableBlank);
+        expect(data.hasActualValueRole).toBe(true);
+        expect(data.actualValue).toBeNull();
     });
 
     // 7. Extrae todos los roles disponibles.
@@ -76,18 +110,19 @@ describe("DataViewService", () => {
                 ]
             }
         };
-        const result = service.parse(dv);
-        expect(result.title).toBe("Title");
-        expect(result.actualValue).toBe(100);
-        expect(result.previousValue).toBe(80);
-        expect(result.variation).toBe(0.25);
-        expect(result.target).toBe(120);
-        expect(result.achievement).toBe(0.83);
-        expect(result.status).toBe("Status");
-        expect(result.comparisonPeriod).toBe("Period");
-        expect(result.statusColor).toBe("#FFFFFF");
-        expect(result.variationColor).toBe("#000000");
-        expect(result.trendIcon).toBe("Icon");
+        const { status, data } = service.parse(dv);
+        expect(status).toBe(DataViewReadStatus.StableValue);
+        expect(data.title).toBe("Title");
+        expect(data.actualValue).toBe(100);
+        expect(data.previousValue).toBe(80);
+        expect(data.variation).toBe(0.25);
+        expect(data.target).toBe(120);
+        expect(data.achievement).toBe(0.83);
+        expect(data.status).toBe("Status");
+        expect(data.comparisonPeriod).toBe("Period");
+        expect(data.statusColor).toBe("#FFFFFF");
+        expect(data.variationColor).toBe("#000000");
+        expect(data.trendIcon).toBe("Icon");
     });
 
     // 8. Conserva los format strings de actualValue, previousValue y target.
@@ -104,9 +139,9 @@ describe("DataViewService", () => {
                 rows: [[1, 2, 3]]
             }
         };
-        const result = service.parse(dv);
-        expect(result.actualValueFormat).toBe("0.0");
-        expect(result.previousValueFormat).toBe("0.00");
-        expect(result.targetFormat).toBe("0.000");
+        const { data } = service.parse(dv);
+        expect(data.actualValueFormat).toBe("0.0");
+        expect(data.previousValueFormat).toBe("0.00");
+        expect(data.targetFormat).toBe("0.000");
     });
 });
