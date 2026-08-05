@@ -6,6 +6,10 @@ import { KpiData } from "../models/kpiData";
 import { VisualState } from "../models/visualState";
 import { KpiLayout } from "../models/layout";
 import { InteractionTarget, KpiTooltipModel } from "../models/interactionModel";
+import { LocalizationKeys as LK } from "../localization/localizationKeys";
+
+/** Minimal localize function signature. */
+export type LocalizeFn = (key: string, fallback: string) => string;
 
 // ── Internal helpers ────────────────────────────────────────────────────────
 
@@ -44,28 +48,30 @@ function push(
     items.push({ displayName: displayName.trim(), value: (value as string).trim() });
 }
 
-// We no longer use displayNameFor, but keep metadataColumns in interface in case needed later.
-
-/** Map StatusCategory to a human-readable label (Spanish). */
-function semanticCategoryLabel(category: string | undefined): string {
+/** Map StatusCategory to a localized label. */
+function semanticCategoryLabel(
+    category: string | undefined,
+    L: LocalizeFn
+): string {
     switch (category) {
-        case "success": return "Éxito";
-        case "warning": return "Precaución";
-        case "danger":  return "Peligro";
-        case "neutral": return "Neutral";
+        case "success": return L(LK.Status.Success, "Success");
+        case "warning": return L(LK.Status.Warning, "Caution");
+        case "danger":  return L(LK.Status.Danger,  "Danger");
+        case "neutral": return L(LK.Status.Neutral, "Neutral");
         default:        return "";
     }
 }
 
-/** Map trend to a human-readable label (Spanish). */
+/** Map trend to a localized label. */
 function trendLabel(
     trend: "up" | "down" | "neutral" | "unavailable" | undefined,
-    isFavorable: boolean | undefined
+    isFavorable: boolean | undefined,
+    L: LocalizeFn
 ): string {
     if (!trend || trend === "unavailable") return "";
-    if (isFavorable === true)  return "Favorable";
-    if (isFavorable === false) return "Desfavorable";
-    return "Neutral";
+    if (isFavorable === true)  return L(LK.Trend.Favorable,   "Favorable");
+    if (isFavorable === false) return L(LK.Trend.Unfavorable, "Unfavorable");
+    return L(LK.Status.Neutral, "Neutral");
 }
 
 // ── Main builder ─────────────────────────────────────────────────────────────
@@ -76,6 +82,8 @@ export interface TooltipModelBuilderInput {
     layout: KpiLayout;
     /** dataView.metadata.columns – may be undefined during tests */
     metadataColumns?: DataViewMetadataColumn[];
+    /** Localization function — optional, falls back to English */
+    localize?: LocalizeFn;
 }
 
 /**
@@ -90,7 +98,8 @@ export interface TooltipModelBuilderInput {
 export function buildTooltipModels(
     input: TooltipModelBuilderInput
 ): ReadonlyMap<InteractionTarget, KpiTooltipModel> {
-    const { kpiData, state, layout, metadataColumns } = input;
+    const { kpiData, state, layout, localize } = input;
+    const L: LocalizeFn = localize ?? ((_key, fallback) => fallback);
     const result = new Map<InteractionTarget, KpiTooltipModel>();
     const hidden = new Set(layout.hiddenByResponsive);
 
@@ -99,21 +108,21 @@ export function buildTooltipModels(
         const items: VisualTooltipDataItem[] = [];
 
         if (layout.showTitle && state.title && !hidden.has("title")) {
-            push(items, "Título", state.title.text);
+            push(items, L(LK.Tooltip.Title, "Title"), state.title.text);
         }
-        push(items, "Valor actual", state.actual.formattedValue);
+        push(items, L(LK.Tooltip.ActualValue, "Actual value"), state.actual.formattedValue);
         
         if (layout.showComparison && state.comparison && !hidden.has("comparison")) {
-            push(items, "Variación", state.comparison.formattedVariation);
+            push(items, L(LK.Tooltip.Variation, "Variation"), state.comparison.formattedVariation);
         }
         if (layout.showTarget && state.target && !hidden.has("target")) {
-            push(items, "Meta", state.target.formattedValue);
+            push(items, L(LK.Tooltip.Target, "Target"), state.target.formattedValue);
         }
         if (layout.showProgress && state.achievement && !hidden.has("progress")) {
-            push(items, "Cumplimiento", state.achievement.formattedValue);
+            push(items, L(LK.Tooltip.Achievement, "Achievement"), state.achievement.formattedValue);
         }
         if (layout.showStatus && validStr(state.calculatedStatusText) && !hidden.has("statusCircle")) {
-            push(items, "Estado", state.calculatedStatusText);
+            push(items, L(LK.Tooltip.Status, "Status"), state.calculatedStatusText);
         }
 
         const visible = layout.showTitle || layout.showComparison || layout.showTarget
@@ -125,7 +134,7 @@ export function buildTooltipModels(
     // ── actualValue ───────────────────────────────────────────────────────────
     {
         const items: VisualTooltipDataItem[] = [];
-        push(items, "Valor actual", state.actual.formattedValue);
+        push(items, L(LK.Tooltip.ActualValue, "Actual value"), state.actual.formattedValue);
 
         result.set("actualValue", {
             target: "actualValue",
@@ -146,19 +155,19 @@ export function buildTooltipModels(
 
             // Period
             const period = comp.period || (validStr(compSettings.defaultPeriodText) ? compSettings.defaultPeriodText : null);
-            push(items, "Período", period);
+            push(items, L(LK.Tooltip.Period, "Period"), period);
 
             // Previous value (raw number from kpiData — already validated, format it simply)
             if (validNum(kpiData.previousValue)) {
-                push(items, "Valor anterior", String(kpiData.previousValue));
+                push(items, L(LK.Tooltip.PreviousValue, "Previous value"), String(kpiData.previousValue));
             }
 
             // Variation
-            push(items, "Variación", comp.formattedVariation);
+            push(items, L(LK.Tooltip.Variation, "Variation"), comp.formattedVariation);
 
             // Trend
-            const tl = trendLabel(comp.trend, comp.isFavorable);
-            push(items, "Tendencia", tl);
+            const tl = trendLabel(comp.trend, comp.isFavorable, L);
+            push(items, L(LK.Tooltip.Trend, "Trend"), tl);
         }
 
         result.set("comparison", {
@@ -175,7 +184,7 @@ export function buildTooltipModels(
         const visible = layout.showTarget && !!state.target && !hidden.has("target");
 
         if (visible && state.target) {
-            let label = "Meta";
+            let label = L(LK.Tooltip.Target, "Target");
             if (validStr(state.settings.target.label)) {
                 label = state.settings.target.label.trim();
             }
@@ -197,10 +206,10 @@ export function buildTooltipModels(
 
         if (visible && state.achievement) {
             // Real cumplimiento — may exceed 100%
-            push(items, "Cumplimiento", state.achievement.formattedValue);
+            push(items, L(LK.Tooltip.Achievement, "Achievement"), state.achievement.formattedValue);
             // Target, when present
             if (state.target && layout.showTarget) {
-                push(items, "Meta", state.target.formattedValue);
+                push(items, L(LK.Tooltip.Target, "Target"), state.target.formattedValue);
             }
         }
 
@@ -218,9 +227,9 @@ export function buildTooltipModels(
         const visible = layout.showStatus && validStr(state.calculatedStatusText) && !hidden.has("statusCircle");
 
         if (visible) {
-            push(items, "Estado", state.calculatedStatusText);
-            const catLabel = semanticCategoryLabel(state.statusCategory);
-            push(items, "Categoría", catLabel);
+            push(items, L(LK.Tooltip.Status,   "Status"),   state.calculatedStatusText);
+            const catLabel = semanticCategoryLabel(state.statusCategory, L);
+            push(items, L(LK.Tooltip.Category, "Category"), catLabel);
         }
 
         result.set("status", {

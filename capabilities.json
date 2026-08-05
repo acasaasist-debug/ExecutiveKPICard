@@ -1,86 +1,109 @@
 {
   "dataRoles": [
     {
-      "displayName": "Título",
+      "displayName": "Title",
+      "displayNameKey": "Role_Title",
       "name": "title",
       "kind": "GroupingOrMeasure",
-      "description": "Título principal del indicador",
+      "description": "Main KPI title",
+      "descriptionKey": "Role_Title_Desc",
       "requiredTypes": [{ "text": true }]
     },
     {
-      "displayName": "Valor actual",
+      "displayName": "Actual Value",
+      "displayNameKey": "Role_ActualValue",
       "name": "actualValue",
       "kind": "Measure",
-      "description": "Resultado principal del KPI",
+      "description": "Main KPI result",
+      "descriptionKey": "Role_ActualValue_Desc",
       "requiredTypes": [{ "numeric": true }, { "integer": true }]
     },
     {
-      "displayName": "Valor anterior",
+      "displayName": "Previous Value",
+      "displayNameKey": "Role_PreviousValue",
       "name": "previousValue",
       "kind": "Measure",
-      "description": "Valor del período anterior (calcula variación si no se da)",
+      "description": "Previous period value (calculates variation if not provided)",
+      "descriptionKey": "Role_PreviousValue_Desc",
       "requiredTypes": [{ "numeric": true }, { "integer": true }]
     },
     {
-      "displayName": "Variación %",
+      "displayName": "Variation %",
+      "displayNameKey": "Role_Variation",
       "name": "variation",
       "kind": "Measure",
-      "description": "Variación decimal frente al período anterior",
+      "description": "Decimal variation against the previous period",
+      "descriptionKey": "Role_Variation_Desc",
       "requiredTypes": [{ "numeric": true }, { "integer": true }]
     },
     {
-      "displayName": "Meta",
+      "displayName": "Target",
+      "displayNameKey": "Role_Target",
       "name": "target",
       "kind": "Measure",
-      "description": "Meta u objetivo del período",
+      "description": "Period target or objective",
+      "descriptionKey": "Role_Target_Desc",
       "requiredTypes": [{ "numeric": true }, { "integer": true }]
     },
     {
-      "displayName": "Cumplimiento %",
+      "displayName": "Achievement %",
+      "displayNameKey": "Role_Achievement",
       "name": "achievement",
       "kind": "Measure",
-      "description": "Cumplimiento decimal (ej: 0.9 = 90%)",
+      "description": "Decimal achievement (e.g. 0.9 = 90%)",
+      "descriptionKey": "Role_Achievement_Desc",
       "requiredTypes": [{ "numeric": true }, { "integer": true }]
     },
     {
-      "displayName": "Estado",
+      "displayName": "Status",
+      "displayNameKey": "Role_Status",
       "name": "status",
       "kind": "GroupingOrMeasure",
-      "description": "Texto de estado",
+      "description": "Status text",
+      "descriptionKey": "Role_Status_Desc",
       "requiredTypes": [{ "text": true }]
     },
     {
-      "displayName": "Período comparado",
+      "displayName": "Comparison Period",
+      "displayNameKey": "Role_ComparisonPeriod",
       "name": "comparisonPeriod",
       "kind": "GroupingOrMeasure",
-      "description": "Texto descriptivo del período",
+      "description": "Descriptive period text",
+      "descriptionKey": "Role_ComparisonPeriod_Desc",
       "requiredTypes": [{ "text": true }]
     },
     {
-      "displayName": "Color del estado",
+      "displayName": "Status Color",
+      "displayNameKey": "Role_StatusColor",
       "name": "statusColor",
       "kind": "GroupingOrMeasure",
-      "description": "Color hexadecimal (ej: #16A34A)",
+      "description": "Hex color (e.g. #16A34A)",
+      "descriptionKey": "Role_StatusColor_Desc",
       "requiredTypes": [{ "text": true }]
     },
     {
-      "displayName": "Color de variación",
+      "displayName": "Variation Color",
+      "displayNameKey": "Role_VariationColor",
       "name": "variationColor",
       "kind": "GroupingOrMeasure",
-      "description": "Color hexadecimal para la variación",
+      "description": "Hex color for the variation",
+      "descriptionKey": "Role_VariationColor_Desc",
       "requiredTypes": [{ "text": true }]
     },
     {
-      "displayName": "Indicador de tendencia",
+      "displayName": "Trend Indicator",
+      "displayNameKey": "Role_TrendIcon",
       "name": "trendIcon",
       "kind": "GroupingOrMeasure",
-      "description": "Símbolo opcional (▲, ▼, ■)",
+      "description": "Optional symbol (▲, ▼, ■)",
+      "descriptionKey": "Role_TrendIcon_Desc",
       "requiredTypes": [{ "text": true }]
     }
   ],
   "objects": {
     "general": {
       "displayName": "General",
+      "displayNameKey": "Card_General",
       "properties": {
         "backgroundColor": { "type": { "fill": { "solid": { "color": true } } } },
         "transparency": { "type": { "numeric": true } },
@@ -99,7 +122,8 @@
       }
     },
     "title": {
-      "displayName": "Título",
+      "displayName": "Title",
+      "displayNameKey": "Card_Title",
       "properties": {
         "show": { "type": { "bool": true } },
         "altText": { "type": { "text": true } },
@@ -114,7 +138,8 @@
       }
     },
     "actualValue": {
-      "displayName": "Valor principal",
+      "displayName": "Actual Value",
+      "displayNameKey": "Card_ActualValue",
       "properties": {
         "show": { "type": { "bool": true } },
         "useModelFormat": { "type": { "bool": true } },
@@ -132,7 +157,8 @@
       }
     },
     "comparison": {
-      "displayName": "Comparación",
+      "displayName": "Comparison",
+      "displayNameKey": "Card_Comparison",
       "properties": {
         "show": { "type": { "bool": true } },
         "showPeriod": { "type": { "bool": true } },
@@ -150,7 +176,8 @@
       }
     },
     "target": {
-      "displayName": "Meta",
+      "displayName": "Target",
+      "displayNameKey": "Card_Target",
       "properties": {
         "show": { "type": { "bool": true } },
         "inheritValueFormat": { "type": { "bool": true } },
@@ -165,7 +192,8 @@
       }
     },
     "progress": {
-      "displayName": "Barra de progreso",
+      "displayName": "Progress Bar",
+      "displayNameKey": "Card_Progress",
       "properties": {
         "show": { "type": { "bool": true } },
         "height": { "type": { "numeric": true } },
@@ -184,15 +212,16 @@
       }
     },
     "status": {
-      "displayName": "Estado",
+      "displayName": "Status",
+      "displayNameKey": "Card_Status",
       "properties": {
         "show": { "type": { "bool": true } },
         "statusSource": {
           "type": {
             "enumeration": [
-              { "value": "auto", "displayName": "Automático" },
-              { "value": "data", "displayName": "Desde datos" },
-              { "value": "custom", "displayName": "Personalizado" }
+              { "value": "auto", "displayName": "Automatic", "displayNameKey": "Option_Auto" },
+              { "value": "data", "displayName": "From data", "displayNameKey": "Option_FromData" },
+              { "value": "custom", "displayName": "Custom", "displayNameKey": "Option_Custom" }
             ]
           }
         },
@@ -214,7 +243,8 @@
       }
     },
     "responsive": {
-      "displayName": "Diseño responsive",
+      "displayName": "Responsive Layout",
+      "displayNameKey": "Card_Responsive",
       "properties": {
         "autoScale": { "type": { "bool": true } },
         "minWidth": { "type": { "numeric": true } },
@@ -225,7 +255,8 @@
       }
     },
     "accessibility": {
-      "displayName": "Accesibilidad",
+      "displayName": "Accessibility",
+      "displayNameKey": "Card_Accessibility",
       "properties": {
         "customAltText": { "type": { "text": true } },
         "includeValue": { "type": { "bool": true } },
@@ -238,9 +269,11 @@
     },
     "tooltipSettings": {
       "displayName": "Tooltips",
+      "displayNameKey": "Card_Tooltips",
       "properties": {
         "show": {
           "displayName": "Show tooltips",
+          "displayNameKey": "Slice_ShowTooltips",
           "type": {
             "bool": true
           }

@@ -9,6 +9,7 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
 import { VisualFormattingSettingsModel } from "./settings/formattingSettings";
 import { DataViewService } from "./services/dataViewService";
@@ -30,10 +31,11 @@ import { SvgFactory } from "./rendering/svgFactory";
 import { TooltipController } from "./interactions/tooltipController";
 import { buildTooltipModels } from "./interactions/tooltipModelBuilder";
 import { ContextMenuController } from "./interactions/contextMenuController";
+import { LocalizationService } from "./localization/localizationService";
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 // ── Build version stamp (update when packaging) ────────────────────────────
-const BUILD_VERSION = "1.0.0.7";
+const BUILD_VERSION = "1.0.0.11";
 
 export class Visual implements IVisual {
     private target!: HTMLElement;
@@ -45,6 +47,7 @@ export class Visual implements IVisual {
     private tooltipController!: TooltipController;
     private selectionManager!: ISelectionManager;
     private contextMenuController!: ContextMenuController;
+    private localizationService!: LocalizationService;
 
     private dataViewService!: DataViewService;
     private kpiCalculationService!: KpiCalculationService;
@@ -67,7 +70,12 @@ export class Visual implements IVisual {
         if (!options) return;
         this.target = options.element;
         this.events = options.host.eventService;
-        this.formattingSettingsService = new FormattingSettingsService();
+
+        // ── Localization ─────────────────────────────────────────────────
+        const manager: ILocalizationManager = options.host.createLocalizationManager();
+        this.localizationService = new LocalizationService(manager);
+        this.formattingSettingsService = new FormattingSettingsService(manager);
+
         this.formattingSettings = new VisualFormattingSettingsModel();
 
         this.dataViewService = new DataViewService();
@@ -178,7 +186,11 @@ export class Visual implements IVisual {
                     this.lastStableState = null;
                     this.lastStableLayout = null;
                     KpiRenderer.clear(this.svgRoot);
-                    LandingPageRenderer.render(this.svgRoot, options.viewport);
+                    LandingPageRenderer.render(
+                        this.svgRoot,
+                        options.viewport,
+                        (key, fallback) => this.localizationService.get(key, fallback)
+                    );
                     this.events.renderingFinished(options);
                     return;
 
@@ -212,15 +224,16 @@ export class Visual implements IVisual {
             );
             const progressRatio = this.kpiCalculationService.getProgressRatio(calculatedAchievement);
 
-            // Formatting settings are now normalized at the beginning of the update method.
-            // ...
+            // Status — pass localize so auto mode uses the user's language
+            const localizeFn = (key: string, fallback: string) =>
+                this.localizationService.get(key, fallback);
 
-            // Status
             const resolvedStatus = StatusService.resolve(
                 calculatedAchievement,
                 kpiData.status !== undefined ? kpiData.status : null,
                 kpiData.statusColor !== undefined ? kpiData.statusColor : null,
-                renderSettings.status
+                renderSettings.status,
+                localizeFn
             );
 
             // Trend / variation color
@@ -316,7 +329,8 @@ export class Visual implements IVisual {
                 kpiData,
                 state,
                 layout,
-                metadataColumns: dataView?.metadata?.columns
+                metadataColumns: dataView?.metadata?.columns,
+                localize: localizeFn
             });
             this.tooltipController.updateModels(tooltipModels);
 

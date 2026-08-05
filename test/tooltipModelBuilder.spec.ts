@@ -1,9 +1,36 @@
-import { buildTooltipModels, TooltipModelBuilderInput } from "../src/interactions/tooltipModelBuilder";
+import { buildTooltipModels, TooltipModelBuilderInput, LocalizeFn } from "../src/interactions/tooltipModelBuilder";
 import { InteractionTarget } from "../src/models/interactionModel";
 import { KpiData } from "../src/models/kpiData";
 import { VisualState } from "../src/models/visualState";
 import { KpiLayout } from "../src/models/layout";
 import powerbi from "powerbi-visuals-api";
+
+/** Spanish localize fn used by most tests to preserve existing assertions. */
+const esLocalize: LocalizeFn = (key, fallback) => {
+    const map: Record<string, string> = {
+        "Tooltip_Title":         "Título",
+        "Tooltip_ActualValue":   "Valor actual",
+        "Tooltip_Variation":     "Variación",
+        "Tooltip_Target":        "Meta",
+        "Tooltip_Achievement":   "Cumplimiento",
+        "Tooltip_Status":        "Estado",
+        "Tooltip_Period":        "Período",
+        "Tooltip_PreviousValue": "Valor anterior",
+        "Tooltip_Trend":         "Tendencia",
+        "Tooltip_Category":      "Categoría",
+        "Status_Success":        "Éxito",
+        "Status_Warning":        "Precaución",
+        "Status_Danger":         "Peligro",
+        "Status_Neutral":        "Neutral",
+        "Trend_Favorable":       "Favorable",
+        "Trend_Unfavorable":     "Desfavorable",
+        "Status_AutoSuccess":    "Cumpliendo",
+        "Status_AutoWarning":    "En camino",
+        "Status_AutoDanger":     "En riesgo",
+        "Status_AutoNeutral":    "Sin información",
+    };
+    return map[key] ?? fallback;
+};
 
 describe("TooltipModelBuilder", () => {
     let input: TooltipModelBuilderInput;
@@ -85,7 +112,7 @@ describe("TooltipModelBuilder", () => {
             { displayName: "KPI Meta Test", roles: { target: true } }
         ];
 
-        input = { kpiData, state, layout, metadataColumns };
+        input = { kpiData, state, layout, metadataColumns, localize: esLocalize };
     });
 
     it("Card contiene únicamente bloques visibles", () => {
@@ -237,5 +264,38 @@ describe("TooltipModelBuilder", () => {
                 expect(technicalNames).not.toContain(item.displayName);
             }
         }
+    });
+
+    it("en-US localize fn produces English labels", () => {
+        const enLocalize: LocalizeFn = (key, fallback) => {
+            const map: Record<string, string> = {
+                "Tooltip_Title":         "Title",
+                "Tooltip_ActualValue":   "Actual value",
+                "Tooltip_Variation":     "Variation",
+                "Tooltip_Target":        "Target",
+                "Tooltip_Achievement":   "Achievement",
+                "Tooltip_Status":        "Status",
+                "Tooltip_Period":        "Period",
+                "Tooltip_PreviousValue": "Previous value",
+                "Tooltip_Trend":         "Trend",
+                "Tooltip_Category":      "Category",
+                "Status_Success":        "Success",
+                "Trend_Favorable":       "Favorable",
+            };
+            return map[key] ?? fallback;
+        };
+        const enInput = { ...input, localize: enLocalize };
+        const result = buildTooltipModels(enInput);
+        const cardModel = result.get("card");
+        const names = cardModel?.items.map((i: any) => i.displayName);
+        expect(names).toEqual(["Title", "Actual value", "Variation", "Target", "Achievement", "Status"]);
+    });
+
+    it("no localize fn produces English fallback labels", () => {
+        const noLocaleInput = { ...input, localize: undefined };
+        const result = buildTooltipModels(noLocaleInput);
+        const cardModel = result.get("card");
+        const names = cardModel?.items.map((i: any) => i.displayName);
+        expect(names).toEqual(["Title", "Actual value", "Variation", "Target", "Achievement", "Status"]);
     });
 });

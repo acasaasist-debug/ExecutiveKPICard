@@ -1,5 +1,32 @@
 import { StatusService } from "../src/services/statusService";
 import { RenderSettings } from "../src/models/visualState";
+import { LocalizeFn } from "../src/services/statusService";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Spanish localize fn — simulates es-ES locale for auto mode labels. */
+const es: LocalizeFn = (key, fallback) => {
+    const map: Record<string, string> = {
+        "Status_AutoSuccess": "Cumpliendo",
+        "Status_AutoWarning": "En camino",
+        "Status_AutoDanger":  "En riesgo",
+        "Status_AutoNeutral": "Sin información",
+    };
+    return map[key] ?? fallback;
+};
+
+/** English localize fn — simulates en-US locale. */
+const en: LocalizeFn = (key, fallback) => {
+    const map: Record<string, string> = {
+        "Status_AutoSuccess": "On Track",
+        "Status_AutoWarning": "At Risk",
+        "Status_AutoDanger":  "Off Track",
+        "Status_AutoNeutral": "No Data",
+    };
+    return map[key] ?? fallback;
+};
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("StatusService", () => {
     let mockSettings: RenderSettings["status"];
@@ -71,33 +98,89 @@ describe("StatusService", () => {
         });
     });
 
-    describe("Mode: AUTO", () => {
+    describe("Mode: AUTO — no localize fn (English fallback)", () => {
         beforeEach(() => {
             mockSettings.statusSource = "auto";
         });
 
-        it("should return auto text and colors for success", () => {
+        it("should return English fallback text for success when no localize fn", () => {
             const result = StatusService.resolve(1.0, "Ignored", "#000000", mockSettings);
+            expect(result.text).toBe("On Track");
+            expect(result.color).toBe("#16A34A");
+        });
+
+        it("should return English fallback text for warning when no localize fn", () => {
+            const result = StatusService.resolve(0.95, "Ignored", "#000000", mockSettings);
+            expect(result.text).toBe("At Risk");
+            expect(result.color).toBe("#F59E0B");
+        });
+
+        it("should return English fallback text for danger when no localize fn", () => {
+            const result = StatusService.resolve(0.5, "Ignored", "#000000", mockSettings);
+            expect(result.text).toBe("Off Track");
+            expect(result.color).toBe("#DC2626");
+        });
+
+        it("should return English fallback text for neutral when no localize fn", () => {
+            const result = StatusService.resolve(null, "Ignored", "#000000", mockSettings);
+            expect(result.text).toBe("No Data");
+            expect(result.color).toBe("#6B7280");
+        });
+    });
+
+    describe("Mode: AUTO — es-ES localize fn", () => {
+        beforeEach(() => {
+            mockSettings.statusSource = "auto";
+        });
+
+        it("should return Spanish text for success with es-ES localize", () => {
+            const result = StatusService.resolve(1.0, null, null, mockSettings, es);
             expect(result.text).toBe("Cumpliendo");
             expect(result.color).toBe("#16A34A");
         });
 
-        it("should return auto text and colors for warning", () => {
-            const result = StatusService.resolve(0.95, "Ignored", "#000000", mockSettings);
+        it("should return Spanish text for warning with es-ES localize", () => {
+            const result = StatusService.resolve(0.95, null, null, mockSettings, es);
             expect(result.text).toBe("En camino");
             expect(result.color).toBe("#F59E0B");
         });
 
-        it("should return auto text and colors for danger", () => {
-            const result = StatusService.resolve(0.5, "Ignored", "#000000", mockSettings);
+        it("should return Spanish text for danger with es-ES localize", () => {
+            const result = StatusService.resolve(0.5, null, null, mockSettings, es);
             expect(result.text).toBe("En riesgo");
             expect(result.color).toBe("#DC2626");
         });
 
-        it("should return auto text and colors for neutral", () => {
-            const result = StatusService.resolve(null, "Ignored", "#000000", mockSettings);
+        it("should return Spanish text for neutral with es-ES localize", () => {
+            const result = StatusService.resolve(null, null, null, mockSettings, es);
             expect(result.text).toBe("Sin información");
             expect(result.color).toBe("#6B7280");
+        });
+    });
+
+    describe("Mode: AUTO — en-US localize fn", () => {
+        beforeEach(() => {
+            mockSettings.statusSource = "auto";
+        });
+
+        it("should return English text for success with en-US localize", () => {
+            const result = StatusService.resolve(1.0, null, null, mockSettings, en);
+            expect(result.text).toBe("On Track");
+        });
+
+        it("should return English text for warning with en-US localize", () => {
+            const result = StatusService.resolve(0.95, null, null, mockSettings, en);
+            expect(result.text).toBe("At Risk");
+        });
+
+        it("should return English text for danger with en-US localize", () => {
+            const result = StatusService.resolve(0.5, null, null, mockSettings, en);
+            expect(result.text).toBe("Off Track");
+        });
+
+        it("should return English text for neutral with en-US localize", () => {
+            const result = StatusService.resolve(null, null, null, mockSettings, en);
+            expect(result.text).toBe("No Data");
         });
     });
 
@@ -112,15 +195,21 @@ describe("StatusService", () => {
             expect(result.color).toBe("#123456");
         });
 
-        it("should fallback to auto text when data text is empty, but keep data color", () => {
+        it("should fallback to auto text when data text is empty (en fallback)", () => {
             const result = StatusService.resolve(1.0, "   ", "#123456", mockSettings);
-            expect(result.text).toBe("Cumpliendo"); // fallback to success auto text
+            expect(result.text).toBe("On Track"); // en fallback
+            expect(result.color).toBe("#123456");
+        });
+
+        it("should fallback to es auto text when data text is empty and es localize passed", () => {
+            const result = StatusService.resolve(1.0, "   ", "#123456", mockSettings, es);
+            expect(result.text).toBe("Cumpliendo");
             expect(result.color).toBe("#123456");
         });
 
         it("should fallback to auto text when data text is null", () => {
-            const result = StatusService.resolve(1.0, null, "#123456", mockSettings);
-            expect(result.text).toBe("Cumpliendo");
+            const result = StatusService.resolve(1.0, null, "#123456", mockSettings, en);
+            expect(result.text).toBe("On Track");
             expect(result.color).toBe("#123456");
         });
 
@@ -137,8 +226,8 @@ describe("StatusService", () => {
         });
         
         it("should fallback to auto text and color when both are invalid/null", () => {
-            const result = StatusService.resolve(1.0, null, null, mockSettings);
-            expect(result.text).toBe("Cumpliendo");
+            const result = StatusService.resolve(1.0, null, null, mockSettings, en);
+            expect(result.text).toBe("On Track");
             expect(result.color).toBe("#16A34A");
         });
     });
@@ -172,9 +261,16 @@ describe("StatusService", () => {
             expect(result.color).toBe("#888888");
         });
 
-        it("should fallback to auto text if custom text is empty", () => {
+        it("should fallback to auto text (en) if custom text is empty", () => {
             mockSettings.successText = "   ";
             const result = StatusService.resolve(1.0, null, null, mockSettings);
+            expect(result.text).toBe("On Track");
+            expect(result.color).toBe("#00FF00");
+        });
+
+        it("should fallback to es auto text if custom text is empty and es localize passed", () => {
+            mockSettings.successText = "   ";
+            const result = StatusService.resolve(1.0, null, null, mockSettings, es);
             expect(result.text).toBe("Cumpliendo");
             expect(result.color).toBe("#00FF00");
         });

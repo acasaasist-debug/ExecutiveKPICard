@@ -267,7 +267,10 @@ describe("Visual - Resize Lifecycle Integration", () => {
                 toggleExpandCollapse: jest.fn()
             }),
             colorPalette: { getColor: jest.fn().mockReturnValue({ value: "#000000" }) },
-            tooltipService: { enabled: jest.fn(), show: jest.fn(), move: jest.fn(), hide: jest.fn() }
+            tooltipService: { enabled: jest.fn(), show: jest.fn(), move: jest.fn(), hide: jest.fn() },
+            createLocalizationManager: jest.fn(() => ({
+                getDisplayName: (key: string) => key
+            }))
         };
         events = { renderingStarted: jest.fn(), renderingFinished: jest.fn(), renderingFailed: jest.fn((options, err) => console.error("RENDERING FAILED:", err)) };
         formattingSettingsService = { populateFormattingSettingsModel: jest.fn().mockReturnValue(new VisualFormattingSettingsModel()) };

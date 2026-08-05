@@ -1,6 +1,10 @@
 import { StatusCategory } from "../models/statusCategory";
 import { RenderSettings } from "../models/visualState";
 import { normalizeHexColor, safeText } from "../utils/validationUtils";
+import { LocalizationKeys as LK } from "../localization/localizationKeys";
+
+/** Minimal localize function signature — accepts a key + English fallback. */
+export type LocalizeFn = (key: string, fallback: string) => string;
 
 export interface ResolvedStatus {
     category: StatusCategory;
@@ -13,18 +17,19 @@ export class StatusService {
         achievement: number | null,
         dataStatus: string | null,
         dataStatusColor: string | null,
-        settings: RenderSettings["status"]
+        settings: RenderSettings["status"],
+        localize?: LocalizeFn
     ): ResolvedStatus {
         const category = this.classify(achievement, settings.effectiveSuccessThreshold, settings.effectiveWarningThreshold);
         
         switch (settings.statusSource) {
             case "data":
-                return this.resolveDataMode(category, dataStatus, dataStatusColor);
+                return this.resolveDataMode(category, dataStatus, dataStatusColor, localize);
             case "custom":
-                return this.resolveCustomMode(category, settings);
+                return this.resolveCustomMode(category, settings, localize);
             case "auto":
             default:
-                return this.resolveAutoMode(category);
+                return this.resolveAutoMode(category, localize);
         }
     }
 
@@ -45,21 +50,23 @@ export class StatusService {
         return "danger";
     }
 
-    private static resolveAutoMode(category: StatusCategory): ResolvedStatus {
+    private static resolveAutoMode(category: StatusCategory, localize?: LocalizeFn): ResolvedStatus {
+        const L = localize ?? ((_key: string, fallback: string) => fallback);
         switch (category) {
-            case "success": return { category, text: "Cumpliendo", color: "#16A34A" };
-            case "warning": return { category, text: "En camino", color: "#F59E0B" };
-            case "danger":  return { category, text: "En riesgo", color: "#DC2626" };
-            case "neutral": return { category, text: "Sin información", color: "#6B7280" };
+            case "success": return { category, text: L(LK.Status.AutoSuccess, "On Track"),  color: "#16A34A" };
+            case "warning": return { category, text: L(LK.Status.AutoWarning, "At Risk"),    color: "#F59E0B" };
+            case "danger":  return { category, text: L(LK.Status.AutoDanger,  "Off Track"),  color: "#DC2626" };
+            case "neutral": return { category, text: L(LK.Status.AutoNeutral, "No Data"),    color: "#6B7280" };
         }
     }
 
     private static resolveDataMode(
         category: StatusCategory,
         dataStatus: string | null,
-        dataStatusColor: string | null
+        dataStatusColor: string | null,
+        localize?: LocalizeFn
     ): ResolvedStatus {
-        const auto = this.resolveAutoMode(category);
+        const auto = this.resolveAutoMode(category, localize);
         
         const cleanText = safeText(dataStatus)?.trim();
         const text = cleanText ? cleanText : auto.text;
@@ -75,9 +82,10 @@ export class StatusService {
 
     private static resolveCustomMode(
         category: StatusCategory,
-        settings: RenderSettings["status"]
+        settings: RenderSettings["status"],
+        localize?: LocalizeFn
     ): ResolvedStatus {
-        const auto = this.resolveAutoMode(category);
+        const auto = this.resolveAutoMode(category, localize);
         
         switch (category) {
             case "success":

@@ -163,7 +163,10 @@ describe("ContextMenu integration in Visual", () => {
                 renderingStarted: jest.fn(),
                 renderingFinished: jest.fn(),
                 renderingFailed: jest.fn()
-            }
+            },
+            createLocalizationManager: jest.fn(() => ({
+                getDisplayName: (key: string) => key
+            }))
         } as unknown as powerbi.extensibility.visual.IVisualHost;
 
         visual = new Visual({
