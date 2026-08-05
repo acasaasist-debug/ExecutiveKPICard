@@ -593,7 +593,7 @@ class StatusCard extends Card {
     
     warningText = new formattingSettings.TextInput({
         name: "warningText",
-        displayName: "Warning Text",
+        displayName: "En camino",
         value: "En camino",
         placeholder: "En camino"
     });
@@ -659,6 +659,49 @@ class StatusCard extends Card {
     ];
 }
 
+class ResponsiveCard extends Card {
+    name: string = "responsive";
+    displayName: string = "Diseño responsive";
+
+    autoScale = new formattingSettings.ToggleSwitch({
+        name: "autoScale",
+        displayName: "Auto escalar",
+        value: true
+    });
+
+    minWidth = new formattingSettings.NumUpDown({
+        name: "minWidth",
+        displayName: "Ancho mínimo",
+        value: 180
+    });
+
+    minHeight = new formattingSettings.NumUpDown({
+        name: "minHeight",
+        displayName: "Alto mínimo",
+        value: 140
+    });
+
+    hideSecondary = new formattingSettings.ToggleSwitch({
+        name: "hideSecondary",
+        displayName: "Ocultar secundarios",
+        value: true
+    });
+
+    compactMode = new formattingSettings.ToggleSwitch({
+        name: "compactMode",
+        displayName: "Modo compacto",
+        value: true
+    });
+
+    slices: Slice[] = [
+        this.autoScale,
+        this.minWidth,
+        this.minHeight,
+        this.hideSecondary,
+        this.compactMode
+    ];
+}
+
 export class VisualFormattingSettingsModel extends Model {
     generalCard = new GeneralCard();
     titleCard = new TitleCard();
@@ -667,6 +710,7 @@ export class VisualFormattingSettingsModel extends Model {
     targetCard = new TargetCard();
     progressCard = new ProgressCard();
     statusCard = new StatusCard();
+    responsiveCard = new ResponsiveCard();
 
     cards = [
         this.generalCard, 
@@ -675,7 +719,8 @@ export class VisualFormattingSettingsModel extends Model {
         this.comparisonCard,
         this.targetCard,
         this.progressCard,
-        this.statusCard
+        this.statusCard,
+        this.responsiveCard
     ];
     
     public populateVisibleProperties() {
@@ -775,14 +820,22 @@ export class VisualFormattingSettingsModel extends Model {
         this.statusCard.successThreshold.visible = isStatusVisible;
         this.statusCard.warningThreshold.visible = isStatusVisible;
         
-        const isCustomStatus = isStatusVisible && (this.statusCard.statusSource.value as powerbi.IEnumMember).value === "custom";
+        const statusValue = (this.statusCard.statusSource.value as any).value;
+        const isCustomStatus = isStatusVisible && statusValue === "custom";
         this.statusCard.successText.visible = isCustomStatus;
         this.statusCard.warningText.visible = isCustomStatus;
         this.statusCard.dangerText.visible = isCustomStatus;
-        this.statusCard.noDataText.visible = isCustomStatus;
-        this.statusCard.successColor.visible = isCustomStatus;
-        this.statusCard.warningColor.visible = isCustomStatus;
-        this.statusCard.dangerColor.visible = isCustomStatus;
-        this.statusCard.neutralColor.visible = isCustomStatus;
+        this.statusCard.noDataText.visible = isCustomStatus || statusValue === "auto";
+        this.statusCard.successColor.visible = isCustomStatus || statusValue === "auto";
+        this.statusCard.warningColor.visible = isCustomStatus || statusValue === "auto";
+        this.statusCard.dangerColor.visible = isCustomStatus || statusValue === "auto";
+        this.statusCard.neutralColor.visible = isCustomStatus || statusValue === "auto";
+        
+        // RESPONSIVE visibility
+        this.responsiveCard.autoScale.visible = true;
+        this.responsiveCard.minWidth.visible = true;
+        this.responsiveCard.minHeight.visible = true;
+        this.responsiveCard.hideSecondary.visible = true;
+        this.responsiveCard.compactMode.visible = true;
     }
 }

@@ -1,6 +1,6 @@
 import { SVGConstants } from "../constants/svg";
 import { VisualDefaults } from "../constants/defaults";
-import { KpiLayout, LayoutMode } from "../models/layout";
+import { KpiLayout } from "../models/layout";
 import { VisualState } from "../models/visualState";
 import { SvgFactory } from "./svgFactory";
 import { TextUtils } from "../utils/textUtils";
@@ -326,11 +326,11 @@ export class KpiRenderer {
         if (!layout.showStatus || !layout.statusText || !state.calculatedStatusText) return;
 
         // Indicator
-        if (layout.statusIndicator) {
-            const circle = SvgFactory.createCircle(SVGConstants.classes.statusIndicator);
-            circle.setAttribute("cx", layout.statusIndicator.x.toString());
-            circle.setAttribute("cy", layout.statusIndicator.y.toString());
-            circle.setAttribute("r", layout.statusIndicator.radius.toString());
+        if (layout.statusCircle) {
+            const circle = SvgFactory.createCircle(SVGConstants.classes.statusCircle);
+            circle.setAttribute("cx", layout.statusCircle.x.toString());
+            circle.setAttribute("cy", layout.statusCircle.y.toString());
+            circle.setAttribute("r", layout.statusCircle.radius.toString());
             if (state.calculatedStatusColor) {
                 circle.style.fill = state.calculatedStatusColor;
             }

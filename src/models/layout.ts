@@ -1,9 +1,14 @@
-export enum LayoutMode {
-    NORMAL = "normal",
-    COMPACT = "compact",
-    MINIMUM = "minimum"
-}
+export type ResponsiveMode = "normal" | "compact" | "minimum";
 
+export type ResponsiveElementKey =
+    | "comparisonPeriod"
+    | "trendIcon"
+    | "comparison"
+    | "target"
+    | "progressPercentage"
+    | "progress"
+    | "statusCircle"
+    | "title";
 export interface Point {
     x: number;
     y: number;
@@ -31,7 +36,20 @@ export interface ProgressLayout {
 }
 
 export interface KpiLayout {
-    mode: LayoutMode;
+    responsiveMode: ResponsiveMode;
+    hiddenByResponsive: ResponsiveElementKey[];
+    effectiveFontSizes: {
+        title: number;
+        actualValue: number;
+        comparison: number;
+        target: number;
+        progressPercentage: number;
+        status: number;
+    };
+    fits: boolean;
+    contentTop: number;
+    contentBottom: number;
+    
     viewport: Size;
     padding: number;
     
@@ -53,6 +71,6 @@ export interface KpiLayout {
     
     progress?: ProgressLayout;
     
-    statusIndicator?: RectLayout & { radius: number };
+    statusCircle?: RectLayout & { radius: number };
     statusText?: TextLayout;
 }

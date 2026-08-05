@@ -8,7 +8,7 @@ describe("VisualFormattingSettingsModel", () => {
     });
 
     it("should create General, Title, ActualValue, Comparison, Target, Progress, Status cards", () => {
-        expect(model.cards.length).toBe(7);
+        expect(model.cards.length).toBe(8);
         expect(model.generalCard.name).toBe("general");
         expect(model.titleCard.name).toBe("title");
         expect(model.actualValueCard.name).toBe("actualValue");

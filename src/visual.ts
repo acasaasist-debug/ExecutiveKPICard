@@ -179,7 +179,8 @@ export class Visual implements IVisual {
                 this.formattingSettings.comparisonCard,
                 this.formattingSettings.targetCard,
                 this.formattingSettings.progressCard,
-                this.formattingSettings.statusCard
+                this.formattingSettings.statusCard,
+                this.formattingSettings.responsiveCard
             );
 
             // Status

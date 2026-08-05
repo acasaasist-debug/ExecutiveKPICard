@@ -28,7 +28,7 @@ export const SVGConstants = {
         progressFill: "progress-fill",
         overperformanceMarker: "overperformance-marker",
         achievementText: "achievement-text",
-        statusIndicator: "status-indicator",
+        statusCircle: "status-indicator",
         statusText: "status-text",
         
         landingTitle: "landing-title",

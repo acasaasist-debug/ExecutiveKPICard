@@ -9,7 +9,8 @@ export function normalizeRenderSettings(
     comparisonCard: any,
     targetCard: any,
     progressCard: any,
-    statusCard: any
+    statusCard: any,
+    responsiveCard: any
 ): RenderSettings {
     const height = clamp(progressCard.height.value, 4, 40);
     const configuredRadius = clamp(progressCard.radius.value, 0, 20);
@@ -24,6 +25,13 @@ export function normalizeRenderSettings(
     if (rawStatusSource !== "auto" && rawStatusSource !== "data" && rawStatusSource !== "custom") {
         rawStatusSource = "auto";
     }
+
+    const responsiveSettings = responsiveCard || ({} as any);
+    const minWidthRaw = Number(responsiveSettings.minWidth?.value);
+    const minWidth = isNaN(minWidthRaw) ? 180 : Math.min(Math.max(minWidthRaw, 100), 500);
+    
+    const minHeightRaw = Number(responsiveSettings.minHeight?.value);
+    const minHeight = isNaN(minHeightRaw) ? 140 : Math.min(Math.max(minHeightRaw, 80), 500);
 
     return {
         general: {
@@ -123,6 +131,13 @@ export function normalizeRenderSettings(
             warningColor: normalizeHexColor(statusCard.warningColor.value.value, "#F59E0B"),
             dangerColor: normalizeHexColor(statusCard.dangerColor.value.value, "#DC2626"),
             neutralColor: normalizeHexColor(statusCard.neutralColor.value.value, "#6B7280")
+        },
+        responsive: {
+            autoScale: responsiveSettings.autoScale?.value !== undefined ? !!responsiveSettings.autoScale.value : true,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            hideSecondary: responsiveSettings.hideSecondary?.value !== undefined ? !!responsiveSettings.hideSecondary.value : true,
+            compactMode: responsiveSettings.compactMode?.value !== undefined ? !!responsiveSettings.compactMode.value : true
         }
     };
 }

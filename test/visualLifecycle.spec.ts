@@ -13,7 +13,7 @@ import { KpiRenderer } from "../src/rendering/kpiRenderer";
 import { LandingPageRenderer } from "../src/rendering/landingPageRenderer";
 import { SvgFactory } from "../src/rendering/svgFactory";
 import { SVGConstants } from "../src/constants/svg";
-import { KpiLayout, LayoutMode } from "../src/models/layout";
+import { KpiLayout, ResponsiveMode } from "../src/models/layout";
 import { VisualState } from "../src/models/visualState";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,7 +64,19 @@ function buildState(withTitle: boolean, value = "1,234"): VisualState {
 
 function buildLayout(withTitle: boolean): KpiLayout {
     return {
-        mode: LayoutMode.NORMAL,
+        responsiveMode: "normal",
+        hiddenByResponsive: [],
+        effectiveFontSizes: {
+            title: 14,
+            actualValue: 32,
+            comparison: 12,
+            target: 12,
+            progressPercentage: 12,
+            status: 12
+        },
+        fits: true,
+        contentTop: 0,
+        contentBottom: 0,
         viewport: { width: 300, height: 220 },
         padding: 16,
         showTitle: withTitle,
@@ -75,7 +87,7 @@ function buildLayout(withTitle: boolean): KpiLayout {
         accent: { x: 0, y: 0, width: 300, height: 3 },
         title:  withTitle ? { x: 150, y: 30, width: 268, fontSize: 14, textAnchor: "middle" } : undefined,
         value:  { x: 150, y: 70, width: 268, fontSize: 32, textAnchor: "middle" },
-        statusIndicator: { x: 100, y: 200, width: 8, height: 8, radius: 4 },
+        statusCircle: { x: 100, y: 200, width: 8, height: 8, radius: 4 },
         statusText:      { x: 114, y: 204, width: 50, fontSize: 12, textAnchor: "start" }
     };
 }
