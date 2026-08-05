@@ -235,6 +235,17 @@
         "focusIndicator": { "type": { "bool": true } },
         "focusColor": { "type": { "fill": { "solid": { "color": true } } } }
       }
+    },
+    "tooltipSettings": {
+      "displayName": "Tooltips",
+      "properties": {
+        "show": {
+          "displayName": "Show tooltips",
+          "type": {
+            "bool": true
+          }
+        }
+      }
     }
   },
   "dataViewMappings": [

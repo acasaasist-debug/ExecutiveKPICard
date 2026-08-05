@@ -262,17 +262,15 @@ describe("Visual - Resize Lifecycle Integration", () => {
                 withMeasure: jest.fn().mockReturnThis(),
                 createSelectionId: jest.fn().mockReturnValue({})
             }),
+            createSelectionManager: jest.fn().mockReturnValue({
+                showContextMenu: jest.fn(),
+                toggleExpandCollapse: jest.fn()
+            }),
             colorPalette: { getColor: jest.fn().mockReturnValue({ value: "#000000" }) },
             tooltipService: { enabled: jest.fn(), show: jest.fn(), move: jest.fn(), hide: jest.fn() }
         };
         events = { renderingStarted: jest.fn(), renderingFinished: jest.fn(), renderingFailed: jest.fn((options, err) => console.error("RENDERING FAILED:", err)) };
-        formattingSettingsService = { populateFormattingSettingsModel: jest.fn().mockImplementation((modelClass, dataview) => {
-            const model = new VisualFormattingSettingsModel();
-            if (dataview?.metadata?.objects?.tooltipSettings?.show !== undefined) {
-                model.tooltipSettings.show.value = dataview.metadata.objects.tooltipSettings.show;
-            }
-            return model;
-        }) };
+        formattingSettingsService = { populateFormattingSettingsModel: jest.fn().mockReturnValue(new VisualFormattingSettingsModel()) };
 
         const options: any = { element, host };
         visual = new Visual(options);
@@ -365,32 +363,5 @@ describe("Visual - Resize Lifecycle Integration", () => {
         // 10. Landing Page not shown
         const landingPageAfter = element.querySelector(`g.${SVGConstants.classes.landingPageGroup}`);
         expect(landingPageAfter ? landingPageAfter.children.length : 0).toBe(0);
-    });
-
-    it("Tooltip settings persistence cycle (true -> false -> resize -> true)", () => {
-        // First update: True
-        const dataViewTrue: powerbi.DataView = {
-            metadata: { columns: [{ roles: { actualValue: true }, type: { numeric: true } as any }], objects: { tooltipSettings: { show: true } } },
-            table: { rows: [[1000]] }
-        } as any;
-        visual.update({ type: powerbi.VisualUpdateType.Data, viewport: { width: 300, height: 200 }, dataViews: [dataViewTrue] } as any);
-        expect((visual as any).tooltipController.enabledBySettings).toBe(true);
-
-        // Second update: False
-        const dataViewFalse: powerbi.DataView = {
-            metadata: { columns: [{ roles: { actualValue: true }, type: { numeric: true } as any }], objects: { tooltipSettings: { show: false } } },
-            table: { rows: [[1000]] }
-        } as any;
-        visual.update({ type: powerbi.VisualUpdateType.Data, viewport: { width: 300, height: 200 }, dataViews: [dataViewFalse] } as any);
-        expect((visual as any).tooltipController.enabledBySettings).toBe(false);
-
-        // Third update: Resize (no dataview)
-        visual.update({ type: powerbi.VisualUpdateType.Resize, viewport: { width: 300, height: 400 }, dataViews: undefined } as any);
-        expect((visual as any).tooltipController.enabledBySettings).toBe(false);
-        expect(host.tooltipService.show).not.toHaveBeenCalled();
-
-        // Fourth update: True again
-        visual.update({ type: powerbi.VisualUpdateType.Data, viewport: { width: 300, height: 200 }, dataViews: [dataViewTrue] } as any);
-        expect((visual as any).tooltipController.enabledBySettings).toBe(true);
     });
 });

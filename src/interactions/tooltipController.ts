@@ -65,6 +65,13 @@ export class TooltipController {
         }
     }
 
+    public hide(): void {
+        this.tooltipService.hide({
+            isTouchEvent: false,
+            immediately: true
+        });
+    }
+
     /**
      * Remove all listeners and hide any active tooltip.
      * Call from visual.destroy().

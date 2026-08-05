@@ -9,25 +9,28 @@ describe("Render Settings Normalizer", () => {
     let mockProgressCard: any;
     let mockStatusCard: any;
     let mockResponsiveCard: any;
-    let tooltipSettingsCard: any;
+    let mockTooltipSettingsCard: any;
 
     beforeEach(() => {
         mockGeneralCard = {
-            backgroundColor: { value: { value: "#ffffff" } },
+            backgroundColor: { value: { value: "#FFFFFF" } },
             transparency: { value: 0 },
-            borderOn: { value: false },
-            borderColor: { value: { value: "#000000" } },
+            borderOn: { value: true },
+            borderColor: { value: { value: "#D7DDE5" } },
             borderThickness: { value: 1 },
-            cornerRadius: { value: 0 },
-            padding: { value: 10 },
-            topLineOn: { value: false },
-            topLineUseStatusColor: { value: false },
-            topLineThickness: { value: 4 },
-            topLineColor: { value: { value: "#000000" } }
+            cornerRadius: { value: 12 },
+            padding: { value: 16 },
+            topLineOn: { value: true },
+            topLineUseStatusColor: { value: true },
+            topLineThickness: { value: 3 },
+            topLineColor: { value: { value: "#3B82F6" } }
+        };
+        mockTooltipSettingsCard = {
+            show: { value: true }
         };
         mockTitleCard = {
             show: { value: true },
-            fontFamily: { value: "Arial" },
+            fontFamily: { value: "Segoe UI" },
             fontSize: { value: 14 },
             bold: { value: true },
             color: { value: { value: "#333333" } },
@@ -118,30 +121,26 @@ describe("Render Settings Normalizer", () => {
             hideSecondary: { value: true },
             compactMode: { value: true }
         };
-
-        tooltipSettingsCard = {
-            show: { value: true }
-        };
     });
 
     it("should clamp progress height between 4 and 40", () => {
         mockProgressCard.height.value = 2;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.height).toBe(4);
 
         mockProgressCard.height.value = 50;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.height).toBe(40);
     });
 
     it("should clamp progress radius between 0 and 20", () => {
         mockProgressCard.radius.value = -5;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.effectiveRadius).toBeGreaterThanOrEqual(0); // Also limited by height/2
 
         mockProgressCard.height.value = 40; // Max height so max effective radius can be 20
         mockProgressCard.radius.value = 30;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.effectiveRadius).toBe(20);
     });
 
@@ -149,37 +148,37 @@ describe("Render Settings Normalizer", () => {
         // height = 10 -> height / 2 = 5. Even if radius = 10, it should be 5
         mockProgressCard.height.value = 10;
         mockProgressCard.radius.value = 10;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.effectiveRadius).toBe(5);
         
         mockProgressCard.radius.value = 3;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.effectiveRadius).toBe(3);
     });
 
     it("should validate and fallback hex colors", () => {
         mockProgressCard.backgroundColor.value.value = "invalid";
-        const settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        const settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.backgroundColor).toBe("#E5E7EB");
     });
 
     it("should handle undefined safeText properly", () => {
         mockComparisonCard.defaultPeriodText.value = null;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.defaultPeriodText).toBe("vs período anterior");
         
         mockTargetCard.label.value = undefined;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.target.label).toBe("Meta: ");
     });
 
     it("should clamp comparison font size between 8 and 36", () => {
         mockComparisonCard.fontSize.value = 5;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.fontSize).toBe(8);
 
         mockComparisonCard.fontSize.value = 50;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.fontSize).toBe(36);
     });
 
@@ -188,7 +187,7 @@ describe("Render Settings Normalizer", () => {
         mockTargetCard.decimalPlaces.value = -1;
         mockProgressCard.decimalPlaces.value = -1;
         
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.percentageDecimals).toBe(0);
         expect(settings.target.decimalPlaces).toBe(0);
         expect(settings.progress.decimalPlaces).toBe(0);
@@ -197,7 +196,7 @@ describe("Render Settings Normalizer", () => {
         mockTargetCard.decimalPlaces.value = 15;
         mockProgressCard.decimalPlaces.value = 10;
         
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.percentageDecimals).toBe(5);
         expect(settings.target.decimalPlaces).toBe(10);
         expect(settings.progress.decimalPlaces).toBe(5);
@@ -205,11 +204,11 @@ describe("Render Settings Normalizer", () => {
 
     it("should clamp progress markThickness between 1 and 10", () => {
         mockProgressCard.markThickness.value = 0;
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.markThickness).toBe(1);
 
         mockProgressCard.markThickness.value = 20;
-        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.progress.markThickness).toBe(10);
     });
 
@@ -218,7 +217,7 @@ describe("Render Settings Normalizer", () => {
         mockComparisonCard.percentageDecimals.value = Infinity;
         mockProgressCard.height.value = undefined;
 
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.target.fontSize).toBe(8); // Default lower bound clamp
         expect(settings.comparison.percentageDecimals).toBe(0); // Default lower bound clamp for non-finite
         expect(settings.progress.height).toBe(4); // Default lower bound clamp
@@ -226,12 +225,12 @@ describe("Render Settings Normalizer", () => {
 
     it("should sanitize empty strings for fallback texts", () => {
         mockComparisonCard.noComparisonText.value = "   ";
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         expect(settings.comparison.noComparisonText).toBe("-");
     });
 
     it("should ensure the result object has no mutable references to FormattingSettings", () => {
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         
         // Mutate original mock
         mockProgressCard.height.value = 40;
@@ -239,11 +238,11 @@ describe("Render Settings Normalizer", () => {
 
         // Assert settings object did not change
         expect(settings.progress.height).toBe(10);
-        expect(settings.general.backgroundColor).toBe("#ffffff");
+        expect(settings.general.backgroundColor).toBe("#FFFFFF");
     });
 
     it("should ensure all number outputs are finite", () => {
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         
         expect(isFinite(settings.general.transparency)).toBe(true);
         expect(isFinite(settings.general.borderThickness)).toBe(true);
@@ -254,7 +253,7 @@ describe("Render Settings Normalizer", () => {
     it("should default title and actual alignment to center if invalid", () => {
         mockTitleCard.alignment.value = "";
         mockActualValueCard.alignment.value = "   ";
-        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+        let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
         
         expect(settings.title.alignment).toBe("center");
         expect(settings.actualValue.alignment).toBe("center");
@@ -263,28 +262,28 @@ describe("Render Settings Normalizer", () => {
     describe("Status Normalization", () => {
         it("should clamp circleSize between 2 and 24", () => {
             mockStatusCard.circleSize.value = 1;
-            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             expect(settings.status.circleSize).toBe(2);
 
             mockStatusCard.circleSize.value = 50;
-            settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             expect(settings.status.circleSize).toBe(24);
         });
 
         it("should sanitize statusSource enum", () => {
             mockStatusCard.statusSource.value.value = "invalid";
-            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             expect(settings.status.statusSource).toBe("auto");
 
             mockStatusCard.statusSource.value = null; // edge case
-            settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             expect(settings.status.statusSource).toBe("auto");
         });
 
         it("should handle inverted thresholds by making effectiveSuccess >= effectiveWarning", () => {
             mockStatusCard.successThreshold.value = 0.5;
             mockStatusCard.warningThreshold.value = 0.9; // inverted mathematically for achievement
-            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             
             expect(settings.status.effectiveSuccessThreshold).toBe(0.9);
             expect(settings.status.effectiveWarningThreshold).toBe(0.5);
@@ -293,25 +292,10 @@ describe("Render Settings Normalizer", () => {
         it("should trim and fallback empty custom texts", () => {
             mockStatusCard.successText.value = "  ";
             mockStatusCard.dangerText.value = undefined;
-            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
+            let settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, mockTooltipSettingsCard);
             
             expect(settings.status.successText).toBe("Cumpliendo");
             expect(settings.status.dangerText).toBe("En riesgo");
-        });
-    });
-    
-    it("preserves tooltipSettings.show=false", () => {
-        tooltipSettingsCard.show.value = false;
-        const settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
-        expect(settings.tooltip.show).toBe(false);
-    });
-
-    it("normalizes non-boolean values to true for tooltipSettings.show", () => {
-        const testCases = [true, undefined, null, "false", 0, 1, {}, []];
-        testCases.forEach(val => {
-            tooltipSettingsCard.show.value = val;
-            const settings = normalizeRenderSettings(mockGeneralCard, mockTitleCard, mockActualValueCard, mockComparisonCard, mockTargetCard, mockProgressCard, mockStatusCard, mockResponsiveCard, tooltipSettingsCard);
-            expect(settings.tooltip.show).toBe(true);
         });
     });
 });

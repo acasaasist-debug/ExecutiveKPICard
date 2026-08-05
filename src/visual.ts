@@ -29,18 +29,22 @@ import { SVGConstants } from "./constants/svg";
 import { SvgFactory } from "./rendering/svgFactory";
 import { TooltipController } from "./interactions/tooltipController";
 import { buildTooltipModels } from "./interactions/tooltipModelBuilder";
+import { ContextMenuController } from "./interactions/contextMenuController";
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 // ── Build version stamp (update when packaging) ────────────────────────────
 const BUILD_VERSION = "1.0.0.7";
 
 export class Visual implements IVisual {
     private target!: HTMLElement;
-    private svgRoot!: SVGElement;
+    private svgRoot!: SVGSVGElement;
     private host!: IVisualHost;
     private formattingSettings!: VisualFormattingSettingsModel;
     private formattingSettingsService!: FormattingSettingsService;
     private events!: IVisualEventService;
     private tooltipController!: TooltipController;
+    private selectionManager!: ISelectionManager;
+    private contextMenuController!: ContextMenuController;
 
     private dataViewService!: DataViewService;
     private kpiCalculationService!: KpiCalculationService;
@@ -64,6 +68,7 @@ export class Visual implements IVisual {
         this.target = options.element;
         this.events = options.host.eventService;
         this.formattingSettingsService = new FormattingSettingsService();
+        this.formattingSettings = new VisualFormattingSettingsModel();
 
         this.dataViewService = new DataViewService();
         this.kpiCalculationService = new KpiCalculationService();
@@ -72,12 +77,23 @@ export class Visual implements IVisual {
         this.layoutCalculator = new LayoutCalculator();
 
         // Create root SVG once in the constructor – never recreated.
-        this.svgRoot = SvgFactory.createElement("svg");
+        this.svgRoot = SvgFactory.createElement("svg") as SVGSVGElement;
         this.svgRoot.classList.add(SVGConstants.classes.root);
         this.target.appendChild(this.svgRoot);
 
         this.host = options.host;
         this.tooltipController = new TooltipController(this.host.tooltipService, this.svgRoot);
+        
+        this.selectionManager = this.host.createSelectionManager();
+        this.contextMenuController = new ContextMenuController(
+            this.svgRoot,
+            this.selectionManager,
+            {
+                onBeforeOpen: () => {
+                    this.tooltipController.hide();
+                }
+            }
+        );
     }
 
     public update(options: VisualUpdateOptions) {
@@ -97,13 +113,27 @@ export class Visual implements IVisual {
             const hasDataView = dataViews && dataViews.length > 0;
             const dataView = hasDataView ? dataViews[0] : undefined;
             
+            // ── 1. Populate formatting settings if dataview exists
             if (dataView) {
                 this.formattingSettings = this.formattingSettingsService
                     .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
-            } else if (!this.formattingSettings) {
-                this.formattingSettings = this.formattingSettingsService
-                    .populateFormattingSettingsModel(VisualFormattingSettingsModel, { metadata: {} } as powerbi.DataView);
             }
+            
+            // ── 2. Normalize Render Settings 
+            const renderSettings: RenderSettings = normalizeRenderSettings(
+                this.formattingSettings.generalCard,
+                this.formattingSettings.titleCard,
+                this.formattingSettings.actualValueCard,
+                this.formattingSettings.comparisonCard,
+                this.formattingSettings.targetCard,
+                this.formattingSettings.progressCard,
+                this.formattingSettings.statusCard,
+                this.formattingSettings.responsiveCard,
+                this.formattingSettings.tooltipSettings
+            );
+
+            // ── 3. Apply tooltip toggle immediately
+            this.tooltipController.setEnabled(renderSettings.tooltip.show);
 
             let status: DataViewReadStatus;
             let kpiData: KpiData;
@@ -155,9 +185,6 @@ export class Visual implements IVisual {
                 case DataViewReadStatus.TransientIncomplete:
                     // The actualValue role is registered but PBI hasn't delivered
                     // the query results yet (rows=[]).  Preserve the current SVG.
-                    // Do NOT call LandingPageRenderer. Do NOT call KpiRenderer.clear.
-                    // Do NOT replace lastStableState.
-                    this.tooltipController.setEnabled(this.lastStableTooltipEnabled);
                     this.events.renderingFinished(options);
                     return;
 
@@ -185,18 +212,8 @@ export class Visual implements IVisual {
             );
             const progressRatio = this.kpiCalculationService.getProgressRatio(calculatedAchievement);
 
-            // Build render settings from formatting cards
-            const renderSettings: RenderSettings = normalizeRenderSettings(
-                this.formattingSettings.generalCard,
-                this.formattingSettings.titleCard,
-                this.formattingSettings.actualValueCard,
-                this.formattingSettings.comparisonCard,
-                this.formattingSettings.targetCard,
-                this.formattingSettings.progressCard,
-                this.formattingSettings.statusCard,
-                this.formattingSettings.responsiveCard,
-                this.formattingSettings.tooltipSettings
-            );
+            // Formatting settings are now normalized at the beginning of the update method.
+            // ...
 
             // Status
             const resolvedStatus = StatusService.resolve(
@@ -295,8 +312,6 @@ export class Visual implements IVisual {
             this.svgRoot.setAttribute("role", "figure");
 
             // ── F. Tooltip Interactions ───────────────────────────────
-            this.tooltipController.setEnabled(renderSettings.tooltip.show);
-            this.lastStableTooltipEnabled = renderSettings.tooltip.show;
             const tooltipModels = buildTooltipModels({
                 kpiData,
                 state,
@@ -313,22 +328,29 @@ export class Visual implements IVisual {
             this.events.renderingFinished(options);
 
         } catch (e) {
+            console.error("REAL EXCEPTION IN VISUAL UPDATE:", e);
             KpiRenderer.clear(this.svgRoot);
             LandingPageRenderer.clear(this.svgRoot);
             this.events.renderingFailed(
                 options,
                 typeof e === "string" ? e : (e as Error).message
             );
+            throw e;
         }
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
-        this.formattingSettings.populateVisibleProperties();
+        if (!this.formattingSettings) {
+            this.formattingSettings = new VisualFormattingSettingsModel();
+        }
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 
     public destroy(): void {
         this.tooltipController.destroy();
+        if (this.contextMenuController) {
+            this.contextMenuController.destroy();
+        }
     }
 
     // ── Helper: action label for the diagnostic log ────────────────────────

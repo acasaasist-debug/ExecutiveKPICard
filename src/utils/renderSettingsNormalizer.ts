@@ -11,7 +11,7 @@ export function normalizeRenderSettings(
     progressCard: any,
     statusCard: any,
     responsiveCard: any,
-    tooltipSettingsCard: any
+    tooltipSettings: any
 ): RenderSettings {
     const height = clamp(progressCard.height.value, 4, 40);
     const configuredRadius = clamp(progressCard.radius.value, 0, 20);
@@ -38,58 +38,58 @@ export function normalizeRenderSettings(
         general: {
             backgroundColor: normalizeHexColor(generalCard.backgroundColor.value.value, "#FFFFFF"),
             transparency: clamp(generalCard.transparency.value, 0, 100),
-            borderOn: normalizeBoolean(generalCard.borderOn?.value, false),
+            borderOn: !!generalCard.borderOn.value,
             borderColor: normalizeHexColor(generalCard.borderColor.value.value, "#D7DDE5"),
             borderThickness: clamp(generalCard.borderThickness.value, 0, Infinity),
             cornerRadius: clamp(generalCard.cornerRadius.value, 0, Infinity),
             padding: clamp(generalCard.padding.value, 0, Infinity),
-            topLineOn: normalizeBoolean(generalCard.topLineOn?.value, false),
-            topLineUseStatusColor: normalizeBoolean(generalCard.topLineUseStatusColor?.value, true),
+            topLineOn: !!generalCard.topLineOn.value,
+            topLineUseStatusColor: !!generalCard.topLineUseStatusColor.value,
             topLineThickness: clamp(generalCard.topLineThickness.value, 0, Infinity),
             topLineColor: normalizeHexColor(generalCard.topLineColor.value.value, "#3B82F6")
         },
         title: {
-            show: normalizeBoolean(titleCard.show?.value, true),
+            show: !!titleCard.show.value,
             fontFamily: safeText(titleCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(titleCard.fontSize.value, 8, Infinity),
-            bold: normalizeBoolean(titleCard.bold?.value, false),
+            bold: !!titleCard.bold.value,
             color: normalizeHexColor(titleCard.color.value.value, "#111827"),
             alignment: safeText(titleCard.alignment.value)?.trim() || "center",
             bottomMargin: clamp(titleCard.bottomMargin.value, 0, Infinity)
         },
         actualValue: {
-            show: normalizeBoolean(actualValueCard.show?.value, true),
-            useModelFormat: normalizeBoolean(actualValueCard.useModelFormat?.value, true),
+            show: !!actualValueCard.show.value,
+            useModelFormat: !!actualValueCard.useModelFormat.value,
             fontFamily: safeText(actualValueCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(actualValueCard.fontSize.value, 8, Infinity),
-            bold: normalizeBoolean(actualValueCard.bold?.value, true),
+            bold: !!actualValueCard.bold.value,
             color: normalizeHexColor(actualValueCard.color.value.value, "#111827"),
             alignment: safeText(actualValueCard.alignment.value)?.trim() || "center",
             displayUnits: clamp(actualValueCard.displayUnits.value, 0, Infinity),
             decimalPlaces: clamp(actualValueCard.decimalPlaces.value, 0, 10),
             prefix: safeText(actualValueCard.prefix.value) ?? "",
             suffix: safeText(actualValueCard.suffix.value) ?? "",
-            thousandsSeparator: normalizeBoolean(actualValueCard.thousandsSeparator?.value, true),
-            showDashIfNull: normalizeBoolean(actualValueCard.showDashIfNull?.value, false)
+            thousandsSeparator: !!actualValueCard.thousandsSeparator.value,
+            showDashIfNull: !!actualValueCard.showDashIfNull.value
         },
         comparison: {
-            show: normalizeBoolean(comparisonCard.show?.value, true),
-            showPeriod: normalizeBoolean(comparisonCard.showPeriod?.value, true),
+            show: !!comparisonCard.show.value,
+            showPeriod: !!comparisonCard.showPeriod.value,
             defaultPeriodText: safeText(comparisonCard.defaultPeriodText.value) ?? "vs período anterior",
-            showVariation: normalizeBoolean(comparisonCard.showVariation?.value, true),
-            showArrow: normalizeBoolean(comparisonCard.showArrow?.value, true),
+            showVariation: !!comparisonCard.showVariation.value,
+            showArrow: !!comparisonCard.showArrow.value,
             fontFamily: safeText(comparisonCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(comparisonCard.fontSize.value, 8, 36),
             positiveColor: normalizeHexColor(comparisonCard.positiveColor.value.value, "#16A34A"),
             negativeColor: normalizeHexColor(comparisonCard.negativeColor.value.value, "#DC2626"),
             neutralColor: normalizeHexColor(comparisonCard.neutralColor.value.value, "#6B7280"),
-            invertLogic: normalizeBoolean(comparisonCard.invertLogic?.value, false),
+            invertLogic: !!comparisonCard.invertLogic.value,
             percentageDecimals: clamp(comparisonCard.percentageDecimals.value, 0, 5),
             noComparisonText: safeText(comparisonCard.noComparisonText.value)?.trim() || "-"
         },
         target: {
-            show: normalizeBoolean(targetCard.show?.value, true),
-            inheritValueFormat: normalizeBoolean(targetCard.inheritValueFormat?.value, false),
+            show: !!targetCard.show.value,
+            inheritValueFormat: !!targetCard.inheritValueFormat.value,
             label: safeText(targetCard.label.value) ?? "Meta: ",
             fontFamily: safeText(targetCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(targetCard.fontSize.value, 8, 36),
@@ -100,24 +100,24 @@ export function normalizeRenderSettings(
             suffix: safeText(targetCard.suffix.value) ?? ""
         },
         progress: {
-            show: normalizeBoolean(progressCard.show?.value, true),
+            show: !!progressCard.show.value,
             height: height,
             effectiveRadius: effectiveRadius,
             backgroundColor: normalizeHexColor(progressCard.backgroundColor.value.value, "#E5E7EB"),
-            useStatusColor: normalizeBoolean(progressCard.useStatusColor?.value, true),
+            useStatusColor: !!progressCard.useStatusColor.value,
             customColor: normalizeHexColor(progressCard.customColor.value.value, "#3B82F6"),
-            showPercentage: normalizeBoolean(progressCard.showPercentage?.value, false),
+            showPercentage: !!progressCard.showPercentage.value,
             percentageSize: clamp(progressCard.percentageSize.value, 8, 36),
             percentageColor: normalizeHexColor(progressCard.percentageColor.value.value, "#6B7280"),
             decimalPlaces: clamp(progressCard.decimalPlaces.value, 0, 5),
-            showOverachievementMark: normalizeBoolean(progressCard.showOverachievementMark?.value, true),
+            showOverachievementMark: !!progressCard.showOverachievementMark.value,
             markColor: normalizeHexColor(progressCard.markColor.value.value, "#111827"),
             markThickness: clamp(progressCard.markThickness.value, 1, 10)
         },
         status: {
-            show: normalizeBoolean(statusCard.show?.value, true),
+            show: !!statusCard.show.value,
             statusSource: rawStatusSource as "auto" | "data" | "custom",
-            showCircle: normalizeBoolean(statusCard.showCircle?.value, true),
+            showCircle: !!statusCard.showCircle.value,
             circleSize: clamp(statusCard.circleSize.value, 2, 24),
             fontFamily: safeText(statusCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(statusCard.fontSize.value, 8, 36),
@@ -134,14 +134,14 @@ export function normalizeRenderSettings(
             neutralColor: normalizeHexColor(statusCard.neutralColor.value.value, "#6B7280")
         },
         responsive: {
-            autoScale: normalizeBoolean(responsiveSettings.autoScale?.value, true),
+            autoScale: responsiveSettings.autoScale?.value !== undefined ? !!responsiveSettings.autoScale.value : true,
             minWidth: minWidth,
             minHeight: minHeight,
-            hideSecondary: normalizeBoolean(responsiveSettings.hideSecondary?.value, true),
-            compactMode: normalizeBoolean(responsiveSettings.compactMode?.value, true)
+            hideSecondary: responsiveSettings.hideSecondary?.value !== undefined ? !!responsiveSettings.hideSecondary.value : true,
+            compactMode: responsiveSettings.compactMode?.value !== undefined ? !!responsiveSettings.compactMode.value : true
         },
         tooltip: {
-            show: normalizeBoolean(tooltipSettingsCard?.show?.value, true)
+            show: normalizeBoolean(tooltipSettings?.show?.value, true)
         }
     };
 }
