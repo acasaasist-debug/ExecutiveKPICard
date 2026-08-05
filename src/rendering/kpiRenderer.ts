@@ -39,6 +39,7 @@ export class KpiRenderer {
 
     private static renderBackground(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const bgGroup = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.backgroundGroup);
+        bgGroup.setAttribute("data-interaction-target", "card");
         SvgFactory.clearGroup(bgGroup);
         
         const generalCard = state.settings.general;
@@ -131,6 +132,7 @@ export class KpiRenderer {
 
     private static renderValue(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.valueGroup);
+        group.setAttribute("data-interaction-target", "actualValue");
         SvgFactory.clearGroup(group);
 
         if (!layout.value || !state.actual.formattedValue) return;
@@ -163,6 +165,7 @@ export class KpiRenderer {
 
     private static renderComparison(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.comparisonGroup);
+        group.setAttribute("data-interaction-target", "comparison");
         SvgFactory.clearGroup(group);
 
         if (!layout.showComparison || !state.comparison) return;
@@ -236,6 +239,7 @@ export class KpiRenderer {
 
     private static renderTarget(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.targetGroup);
+        group.setAttribute("data-interaction-target", "target");
         SvgFactory.clearGroup(group);
 
         if (!layout.showTarget || !layout.target || !state.target) return;
@@ -260,6 +264,7 @@ export class KpiRenderer {
 
     private static renderProgress(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.progressGroup);
+        group.setAttribute("data-interaction-target", "progress");
         SvgFactory.clearGroup(group);
 
         if (!layout.showProgress || !layout.progress || !state.achievement) return;
@@ -321,6 +326,7 @@ export class KpiRenderer {
 
     private static renderStatus(svgRoot: SVGElement, layout: KpiLayout, state: VisualState): void {
         const group = SvgFactory.ensureGroup(svgRoot, SVGConstants.classes.statusGroup);
+        group.setAttribute("data-interaction-target", "status");
         SvgFactory.clearGroup(group);
 
         if (!layout.showStatus || !layout.statusText || !state.calculatedStatusText) return;

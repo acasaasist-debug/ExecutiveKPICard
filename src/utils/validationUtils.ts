@@ -9,6 +9,15 @@ export function safeText(value: any): string | undefined {
     return String(value);
 }
 
+export function normalizeBoolean(
+    value: unknown,
+    defaultValue: boolean
+): boolean {
+    return typeof value === "boolean"
+        ? value
+        : defaultValue;
+}
+
 export function isValidHexColor(value: any): boolean {
     if (typeof value !== "string") {
         return false;

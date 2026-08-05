@@ -702,6 +702,21 @@ class ResponsiveCard extends Card {
     ];
 }
 
+class TooltipSettingsCard extends formattingSettings.SimpleCard {
+    name = "tooltipSettings";
+    displayName = "Tooltips";
+
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show tooltips",
+        value: true
+    });
+
+    slices = [
+        this.show
+    ];
+}
+
 export class VisualFormattingSettingsModel extends Model {
     generalCard = new GeneralCard();
     titleCard = new TitleCard();
@@ -711,6 +726,7 @@ export class VisualFormattingSettingsModel extends Model {
     progressCard = new ProgressCard();
     statusCard = new StatusCard();
     responsiveCard = new ResponsiveCard();
+    tooltipSettings = new TooltipSettingsCard();
 
     cards = [
         this.generalCard, 
@@ -720,7 +736,8 @@ export class VisualFormattingSettingsModel extends Model {
         this.targetCard,
         this.progressCard,
         this.statusCard,
-        this.responsiveCard
+        this.responsiveCard,
+        this.tooltipSettings
     ];
     
     public populateVisibleProperties() {

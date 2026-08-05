@@ -126,6 +126,10 @@ export interface StatusRenderSettings {
     neutralColor: string;
 }
 
+export interface TooltipRenderSettings {
+    show: boolean;
+}
+
 export interface RenderSettings {
     general: GeneralRenderSettings;
     title: TitleRenderSettings;
@@ -135,6 +139,7 @@ export interface RenderSettings {
     progress: ProgressRenderSettings;
     status: StatusRenderSettings;
     responsive: ResponsiveRenderSettings;
+    tooltip: TooltipRenderSettings;
 }
 
 export type Phase5ARenderSettings = RenderSettings;

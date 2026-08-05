@@ -7,6 +7,7 @@ import "./../style/visual.less";
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
+import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
 
 import { VisualFormattingSettingsModel } from "./settings/formattingSettings";
@@ -26,16 +27,20 @@ import { KpiRenderer } from "./rendering/kpiRenderer";
 import { LandingPageRenderer } from "./rendering/landingPageRenderer";
 import { SVGConstants } from "./constants/svg";
 import { SvgFactory } from "./rendering/svgFactory";
+import { TooltipController } from "./interactions/tooltipController";
+import { buildTooltipModels } from "./interactions/tooltipModelBuilder";
 
 // ── Build version stamp (update when packaging) ────────────────────────────
-const BUILD_VERSION = "1.0.0.4";
+const BUILD_VERSION = "1.0.0.7";
 
 export class Visual implements IVisual {
     private target!: HTMLElement;
     private svgRoot!: SVGElement;
+    private host!: IVisualHost;
     private formattingSettings!: VisualFormattingSettingsModel;
     private formattingSettingsService!: FormattingSettingsService;
     private events!: IVisualEventService;
+    private tooltipController!: TooltipController;
 
     private dataViewService!: DataViewService;
     private kpiCalculationService!: KpiCalculationService;
@@ -49,6 +54,7 @@ export class Visual implements IVisual {
     private lastStableData: KpiData | null = null;
     private lastStableState: VisualState | null = null;
     private lastStableLayout: KpiLayout | null = null;
+    private lastStableTooltipEnabled = true;
 
     // Monotonic counter for the structured update log.
     private updateSequence = 0;
@@ -69,6 +75,9 @@ export class Visual implements IVisual {
         this.svgRoot = SvgFactory.createElement("svg");
         this.svgRoot.classList.add(SVGConstants.classes.root);
         this.target.appendChild(this.svgRoot);
+
+        this.host = options.host;
+        this.tooltipController = new TooltipController(this.host.tooltipService, this.svgRoot);
     }
 
     public update(options: VisualUpdateOptions) {
@@ -86,11 +95,15 @@ export class Visual implements IVisual {
             // ── A. Parse the DataView or use last stable state ────────
             const dataViews = options.dataViews;
             const hasDataView = dataViews && dataViews.length > 0;
-            let dataView = hasDataView ? dataViews[0] : undefined;
+            const dataView = hasDataView ? dataViews[0] : undefined;
             
-            const formattingDataView = dataView ? dataView : { metadata: {} } as powerbi.DataView;
-            this.formattingSettings = this.formattingSettingsService
-                .populateFormattingSettingsModel(VisualFormattingSettingsModel, formattingDataView);
+            if (dataView) {
+                this.formattingSettings = this.formattingSettingsService
+                    .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
+            } else if (!this.formattingSettings) {
+                this.formattingSettings = this.formattingSettingsService
+                    .populateFormattingSettingsModel(VisualFormattingSettingsModel, { metadata: {} } as powerbi.DataView);
+            }
 
             let status: DataViewReadStatus;
             let kpiData: KpiData;
@@ -144,6 +157,7 @@ export class Visual implements IVisual {
                     // the query results yet (rows=[]).  Preserve the current SVG.
                     // Do NOT call LandingPageRenderer. Do NOT call KpiRenderer.clear.
                     // Do NOT replace lastStableState.
+                    this.tooltipController.setEnabled(this.lastStableTooltipEnabled);
                     this.events.renderingFinished(options);
                     return;
 
@@ -180,7 +194,8 @@ export class Visual implements IVisual {
                 this.formattingSettings.targetCard,
                 this.formattingSettings.progressCard,
                 this.formattingSettings.statusCard,
-                this.formattingSettings.responsiveCard
+                this.formattingSettings.responsiveCard,
+                this.formattingSettings.tooltipSettings
             );
 
             // Status
@@ -279,7 +294,18 @@ export class Visual implements IVisual {
             this.svgRoot.setAttribute("aria-label", "Executive KPI Card");
             this.svgRoot.setAttribute("role", "figure");
 
-            // ── F. Persist stable state ───────────────────────────────
+            // ── F. Tooltip Interactions ───────────────────────────────
+            this.tooltipController.setEnabled(renderSettings.tooltip.show);
+            this.lastStableTooltipEnabled = renderSettings.tooltip.show;
+            const tooltipModels = buildTooltipModels({
+                kpiData,
+                state,
+                layout,
+                metadataColumns: dataView?.metadata?.columns
+            });
+            this.tooltipController.updateModels(tooltipModels);
+
+            // ── G. Persist stable state ───────────────────────────────
             this.lastStableData   = kpiData;
             this.lastStableState  = state;
             this.lastStableLayout = layout; // Stored but not reused on resize
@@ -299,6 +325,10 @@ export class Visual implements IVisual {
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         this.formattingSettings.populateVisibleProperties();
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
+    }
+
+    public destroy(): void {
+        this.tooltipController.destroy();
     }
 
     // ── Helper: action label for the diagnostic log ────────────────────────
