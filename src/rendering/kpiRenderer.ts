@@ -182,9 +182,9 @@ export class KpiRenderer {
                 periodText.setAttribute("y", layout.comparisonPeriod.y.toString());
                 periodText.setAttribute("text-anchor", layout.comparisonPeriod.textAnchor || "start");
                 periodText.style.fontSize = `${layout.comparisonPeriod.fontSize}px`;
-                periodText.style.fontFamily = compSettings.fontFamily;
+                periodText.style.fontFamily = compSettings.labelFontFamily;
                 
-                const truncatedPeriod = TextUtils.truncateText(rawPeriod, layout.comparisonPeriod.width || 50, layout.comparisonPeriod.fontSize || 12, compSettings.fontFamily);
+                const truncatedPeriod = TextUtils.truncateText(rawPeriod, layout.comparisonPeriod.width || 50, layout.comparisonPeriod.fontSize || 12, compSettings.labelFontFamily);
                 periodText.textContent = truncatedPeriod;
                 group.appendChild(periodText);
             }

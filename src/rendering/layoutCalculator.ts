@@ -61,6 +61,7 @@ export class LayoutCalculator {
             title: Math.floor(settings.title.fontSize * scaleSecondary),
             actualValue: Math.floor(settings.actualValue.fontSize * scaleValue),
             comparison: Math.floor(settings.comparison.fontSize * scaleSecondary),
+            comparisonPeriod: Math.floor(settings.comparison.labelFontSize * scaleSecondary),
             target: Math.floor(settings.target.fontSize * scaleSecondary),
             progressPercentage: Math.floor(settings.progress.percentageSize * scaleSecondary),
             status: Math.floor(settings.status.fontSize * scaleSecondary)
@@ -120,7 +121,7 @@ export class LayoutCalculator {
         const blocks: any[] = [];
         if (showTitle) blocks.push({ key: "title", height: effectiveFontSizes.title, minGapAfter: minGap, maxGapAfter: maxGap, weight: 1 });
         blocks.push({ key: "value", height: effectiveFontSizes.actualValue, minGapAfter: minGap, maxGapAfter: maxGap, weight: 2 });
-        if (showComparison) blocks.push({ key: "comparison", height: effectiveFontSizes.comparison, minGapAfter: minGap, maxGapAfter: maxGap, weight: 1 });
+        if (showComparison) blocks.push({ key: "comparison", height: Math.max(effectiveFontSizes.comparison, settings.comparison.showPeriod && !isHidden("comparisonPeriod") ? effectiveFontSizes.comparisonPeriod : 0), minGapAfter: minGap, maxGapAfter: maxGap, weight: 1 });
         if (showTarget) blocks.push({ key: "target", height: effectiveFontSizes.target, minGapAfter: minGap, maxGapAfter: maxGap, weight: 1 });
         if (showProgress) blocks.push({ key: "progress", height: Math.max(settings.progress.height, settings.progress.showPercentage && !isHidden("progressPercentage") ? effectiveFontSizes.progressPercentage : 0), minGapAfter: minGap, maxGapAfter: maxGap, weight: 1.5 });
         if (showStatus) blocks.push({ key: "status", height: Math.max(effectiveFontSizes.status, settings.status.showCircle && !isHidden("statusCircle") ? settings.status.circleSize : 0), minGapAfter: 0, maxGapAfter: 0, weight: 1 });
@@ -212,11 +213,11 @@ export class LayoutCalculator {
                 case "comparison":
                     const showPeriod = settings.comparison.showPeriod && !isHidden("comparisonPeriod");
                     if (showPeriod) {
-                        result.comparisonPeriod = { x: padding, y: blockTop + b.height, width: innerWidth / 2, fontSize: b.height, textAnchor: "start" };
+                        result.comparisonPeriod = { x: padding, y: blockTop + Math.max(effectiveFontSizes.comparison, effectiveFontSizes.comparisonPeriod), width: innerWidth / 2, fontSize: effectiveFontSizes.comparisonPeriod, textAnchor: "start" };
                     }
                     const showTrend = settings.comparison.showArrow && !isHidden("trendIcon");
                     if (settings.comparison.showVariation || showTrend) {
-                        result.variation = { x: viewport.width - padding, y: blockTop + b.height, width: innerWidth / (showPeriod ? 2 : 1), fontSize: b.height, textAnchor: "end" };
+                        result.variation = { x: viewport.width - padding, y: blockTop + Math.max(effectiveFontSizes.comparison, effectiveFontSizes.comparisonPeriod), width: innerWidth / (showPeriod ? 2 : 1), fontSize: effectiveFontSizes.comparison, textAnchor: "end" };
                     }
                     break;
                 case "target":
@@ -225,7 +226,9 @@ export class LayoutCalculator {
                 case "progress":
                     const trackHeight = settings.progress.height;
                     const showPct = settings.progress.showPercentage && !isHidden("progressPercentage");
-                    const trackWidth = innerWidth - (showPct ? 40 : 0);
+                    const maxTrackWidth = innerWidth - (showPct ? 40 : 0);
+                    const barLengthPct = settings.progress.barLength;
+                    const trackWidth = maxTrackWidth * (barLengthPct / 100);
                     const trackY = blockTop + (b.height - trackHeight) / 2;
                     const track = { x: padding, y: trackY, width: Math.max(0, trackWidth), height: trackHeight };
                     const fillRatio = Math.max(0, Math.min(1, state.achievement?.progressRatio ?? 0));

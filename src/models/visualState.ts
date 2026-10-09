@@ -67,6 +67,8 @@ export interface ComparisonRenderSettings {
     defaultPeriodText: string;
     showVariation: boolean;
     showArrow: boolean;
+    labelFontFamily: string;
+    labelFontSize: number;
     fontFamily: string;
     fontSize: number;
     positiveColor: string;
@@ -93,6 +95,7 @@ export interface TargetRenderSettings {
 export interface ProgressRenderSettings {
     show: boolean;
     height: number;
+    barLength: number;
     effectiveRadius: number;
     backgroundColor: string;
     useStatusColor: boolean;

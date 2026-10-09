@@ -78,6 +78,8 @@ export function normalizeRenderSettings(
             defaultPeriodText: safeText(comparisonCard.defaultPeriodText.value) ?? "vs período anterior",
             showVariation: !!comparisonCard.showVariation.value,
             showArrow: !!comparisonCard.showArrow.value,
+            labelFontFamily: safeText(comparisonCard.labelFontFamily.value) ?? "Segoe UI",
+            labelFontSize: clamp(comparisonCard.labelFontSize.value, 8, 36),
             fontFamily: safeText(comparisonCard.fontFamily.value) ?? "Segoe UI",
             fontSize: clamp(comparisonCard.fontSize.value, 8, 36),
             positiveColor: normalizeHexColor(comparisonCard.positiveColor.value.value, "#16A34A"),
@@ -102,6 +104,7 @@ export function normalizeRenderSettings(
         progress: {
             show: !!progressCard.show.value,
             height: height,
+            barLength: clamp(progressCard.barLength.value, 1, 100),
             effectiveRadius: effectiveRadius,
             backgroundColor: normalizeHexColor(progressCard.backgroundColor.value.value, "#E5E7EB"),
             useStatusColor: !!progressCard.useStatusColor.value,

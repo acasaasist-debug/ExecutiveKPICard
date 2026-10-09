@@ -304,6 +304,24 @@ class ComparisonCard extends Card {
         placeholder: ""
     });
     
+    labelFontFamily = new formattingSettings.FontPicker({
+        name: "labelFontFamily",
+        displayName: "Label Font Family",
+        displayNameKey: LK.Slice.LabelFontFamily,
+        value: "Segoe UI"
+    });
+    
+    labelFontSize = new formattingSettings.NumUpDown({
+        name: "labelFontSize",
+        displayName: "Label Text Size",
+        displayNameKey: LK.Slice.LabelTextSize,
+        value: 12,
+        options: {
+            minValue: { type: powerbi.visuals.ValidatorType.Min, value: 8 },
+            maxValue: { type: powerbi.visuals.ValidatorType.Max, value: 36 }
+        }
+    });
+    
     showVariation = new formattingSettings.ToggleSwitch({
         name: "showVariation",
         displayName: "Show Variation",
@@ -382,6 +400,8 @@ class ComparisonCard extends Card {
         this.show,
         this.showPeriod,
         this.defaultPeriodText,
+        this.labelFontFamily,
+        this.labelFontSize,
         this.showVariation,
         this.showArrow,
         this.fontFamily,
@@ -500,6 +520,17 @@ class ProgressCard extends Card {
         displayNameKey: LK.Slice.Height,
         value: 10
     });
+
+    barLength = new formattingSettings.NumUpDown({
+        name: "barLength",
+        displayName: "Bar Length (%)",
+        displayNameKey: LK.Slice.BarLength,
+        value: 100,
+        options: {
+            minValue: { type: powerbi.visuals.ValidatorType.Min, value: 1 },
+            maxValue: { type: powerbi.visuals.ValidatorType.Max, value: 100 }
+        }
+    });
     
     radius = new formattingSettings.NumUpDown({
         name: "radius",
@@ -584,6 +615,7 @@ class ProgressCard extends Card {
     slices: Slice[] = [
         this.show,
         this.height,
+        this.barLength,
         this.radius,
         this.backgroundColor,
         this.useStatusColor,
